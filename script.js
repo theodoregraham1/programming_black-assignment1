@@ -1,16 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById("nav-index-btn").addEventListener("click", loadIndex)
-    document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse)
+    document.getElementById("nav-index-btn").addEventListener("click", loadIndex);
+    document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse);
+    document.getElementById("nav-add-btn").addEventListener("click", loadAdd)
 
-    loadBrowse()
+    loadAdd();
 })
+
+const TAXONOMY_ORDER = ["Species", "Genus", "Family", "Order"];
 
 function loadIndex() {
     let bod = document.getElementById("main-container")
     clearElement(bod)
 
     let h2 = document.createElement("h2");
-    h2.className = "mb-3";
+    h2.classList.add("mb-3", "text-center");
     h2.appendChild(document.createTextNode("Home"));
     bod.appendChild(h2);
 
@@ -69,12 +72,12 @@ function loadBrowse () {
     /*
     TODO: Use css to better display levels (colours) (later)
      */
-    let bod = document.getElementById("main-container")
-    clearElement(bod)
+    let bod = document.getElementById("main-container");
+    clearElement(bod);
 
     // Headers
     let h2 = document.createElement("h2");
-    h2.className = "mb-3";
+    h2.classList.add("mb-3", "text-center");
     h2.appendChild(document.createTextNode("Browse"));
     bod.appendChild(h2);
 
@@ -91,7 +94,7 @@ function createBrowseLevel (level, parent_id, parent) {
     level_list.classList.add("accordion","accordion-flush");
     level_list.id = `${parent_id}-list`;
 
-    level_list.hidden = true
+    // level_list.hidden = true
     parent.appendChild(level_list)
 
     // TODO: fetch level data from back-end
@@ -102,27 +105,63 @@ function createBrowseLevel (level, parent_id, parent) {
         level_list.appendChild(item);
         let item_bod = document.getElementById(`${item_id}-body`);
         item_bod.appendChild(document.createTextNode("lorem ipsum lorem ipsum lorem lorem lorem"));
-
+        if (level > 0) {
+            createBrowseLevel(level - 1, item_id, item_bod);
+        }
+        /*
         // Set-up for loading when it is clicked
         document.getElementById(`${item_id}-opener`).addEventListener("click", () => {
 
             if (!document.getElementById(`${item_id}-list`)) {
                 // Use forEach later
                 if (level > 0) {
-                    createBrowseLevel(level - 1, item_id, item_bod);
                 } else {
                     // something else, to link to individual species
                 }
             }
         })
+         */
     }
 
-    level_list.hidden = false
     return level_list
 }
 
 function loadAdd () {
+    let bod = document.getElementById("main-container");
+    clearElement(bod);
 
+    let h2 = document.createElement("h2");
+    h2.classList.add("mb-3", "text-center");
+    h2.appendChild(document.createTextNode("Home"));
+    bod.appendChild(h2);
+
+    // Setup breadcrumb
+    let breadcrumb = document.createElement("nav");
+    breadcrumb.ariaLabel = "breadcrumb";
+    bod.appendChild(breadcrumb);
+
+    let bread_ol = document.createElement("ol");
+    bread_ol.className = "breadcrumb";
+    breadcrumb.append(bread_ol);
+
+    let order_item = document.createElement("li");
+    order_item.className = "breadcrumb-item";
+    order_item.appendChild(document.createTextNode("Aves"))
+    bread_ol.appendChild(order_item);
+
+    let level = 3;
+
+    // Setup dropdown
+    let bread_dropdown = createBreadcrumbDropend(
+        [0,1,2,3,4,5], TAXONOMY_ORDER[level]);
+
+
+    let bread_item = document.createElement("li");
+    bread_item.className = "breadcrumb-item";
+    bread_item.style.width = Math.ceil(bread_dropdown.clientWidth * 1.2);
+    bread_item.appendChild(bread_dropdown);
+
+    bread_ol.appendChild(bread_item)
 }
 
 function loadSearch () {
@@ -181,3 +220,30 @@ function createAccordionItem (item_id, title_text, parent_id) {
     return new_li
 }
 
+function createBreadcrumbDropend (choices, title) {
+    let container = document.createElement("div");
+    container.className = "dropend";
+
+    let btn = document.createElement("span");
+    btn.classList.add("dropdown-toggle", "badge", "bg-primary");
+    btn.ariaExpanded = "false";
+    btn.type = "button";
+    btn.id = button_id;
+    btn.setAttribute("data-bs-toggle", "dropdown");
+    btn.appendChild(document.createTextNode(title));
+    container.appendChild(btn);
+
+    let options = document.createElement("ul");
+    options.className = "dropdown-menu";
+    container.appendChild(options);
+
+    for (let i=0;i<choices.length; i++) {
+        console.log(choices[i])
+        let li = document.createElement("li");
+        li.className = "dropdown-item";
+        li.appendChild(document.createTextNode(choices[i]));
+        options.appendChild(li)
+    }
+
+    return container
+}
