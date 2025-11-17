@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("nav-index-btn").addEventListener("click", loadIndex)
     document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse)
 
-    loadIndex()
+    loadBrowse()
 })
 
 function loadIndex() {
@@ -19,6 +19,7 @@ function loadIndex() {
 
     for (let i=0;i<3;i++) {
         // TODO: temp
+        // FIXME: these go too large when they become multirow
         let bird_id = i
 
         let col = document.createElement("div");
@@ -83,41 +84,46 @@ function loadBrowse () {
     orders_list.classList.add("accordion","accordion-flush");
     orders_list.id = "orders-list";
 
-    for (let i=0; i<5;i++) {
-        // TODO when the button is clicked, the list needs to be expanded as well as loaded from backend
-        let new_li = document.createElement("div");
-        new_li.className = "accordion-item";
-
-        let title = document.createElement("p");
-        title.className = "accordion-header";
-        let opener = document.createElement("button");
-        opener.classList.add("accordion-button", "collapsed");
-        opener.type = "button";
-        opener.setAttribute("data-bs-toggle", "collapse");
-        opener.setAttribute("data-bs-target", `#order-list-${i}`);
-        opener.ariaExpanded = "false"
-        opener.setAttribute("aria-controls", `order-list-${i}`);
-        opener.appendChild(document.createTextNode(`${i}`)); // TODO
-        title.appendChild(opener)
-        new_li.appendChild(title)
-
-        let acc_collapse = document.createElement("div");
-        acc_collapse.id = `order-list-${i}`;
-        acc_collapse.classList.add("accordion-collapse", "collapse");
-        opener.setAttribute("data-bs-parent", "#orders-list");
-
-        let acc_body = document.createElement("div");
-        acc_body.className = "accordion-body";
-        acc_body.appendChild(document.createTextNode("lorem ipsum ajfajlfbaj"));
-
-        acc_collapse.appendChild(acc_body);
-        new_li.appendChild(acc_collapse);
-
-        orders_list.appendChild(new_li);
-    }
     bod.appendChild(orders_list);
+
+    for (let o=0; o<5;o++) {
+        // Create accordion element
+        let item_id = `order-list-${o}`;
+        let item = createAccordionItem(item_id, o);
+        orders_list.appendChild(item);
+
+        document.getElementById(`${item_id}-body`)
+            .appendChild(document.createTextNode("lorem ipsum lorem ipsum lorem lorem lorem")); // TODO: static
+
+
+        // Set-up for loading when it is clicked
+        document.getElementById(`${item_id}-opener`).addEventListener("click", () => {
+            if (!document.getElementById(`${item_id}-sublist`)) {
+                // Use forEach later
+                let families_list = document.createElement("div");
+                families_list.classList.add("accordion", "ms-1", "mt-3");
+                families_list.id = `${item_id}-sublist`;
+                document.getElementById(`${item_id}-body`)
+                    .appendChild(families_list);
+
+                for (let f = 0; f < 5; f++) {
+                    let sub_item_id = `${item_id}-${f}`;
+                    let sub_item = createAccordionItem(sub_item_id, `${o}-${f}`);
+                    families_list.appendChild(sub_item)
+
+                    document.getElementById(`${sub_item_id}-body`)
+                        .appendChild(document.createTextNode("lorem ipsum lorem ipsum lorem lorem lorem"));
+                }
+            }
+        })
+    }
 }
 
+function createBrowseLevel (level, parent_id) {
+    let list = document.createElement("div");
+    list.classList.add("accordion","accordion-flush");
+    list.id = `${parent_id}-list`;
+}
 
 function loadAdd () {
 
@@ -140,3 +146,41 @@ function clearElement (element) {
         element.removeChild(element.firstChild)
     }
 }
+
+function createAccordionItem (item_id, title_text) {
+    // Create element
+    let new_li = document.createElement("div");
+    new_li.className = "accordion-item";
+    new_li.id = `${item_id}-container`
+
+    // Create title section
+    let title = document.createElement("p");
+    title.className = "accordion-header";
+
+    let opener = document.createElement("button");
+    opener.classList.add("accordion-button", "collapsed");
+    opener.id = `${item_id}-opener`
+    opener.type = "button";
+    opener.setAttribute("data-bs-toggle", "collapse");
+    opener.setAttribute("data-bs-target", `#${item_id}`);
+    opener.ariaExpanded = "false";
+    opener.setAttribute("aria-controls", item_id);
+    opener.appendChild(document.createTextNode(title_text));
+    title.appendChild(opener)
+    new_li.appendChild(title)
+
+    // Create body section
+    let acc_collapse = document.createElement("div");
+    acc_collapse.id = item_id;
+    acc_collapse.classList.add("accordion-collapse", "collapse");
+
+    let acc_body = document.createElement("div");
+    acc_body.className = "accordion-body";
+    acc_body.id = `${item_id}-body`
+
+    acc_collapse.appendChild(acc_body);
+    new_li.appendChild(acc_collapse);
+
+    return new_li
+}
+
