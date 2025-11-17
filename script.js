@@ -66,6 +66,9 @@ function loadIndex() {
 
 
 function loadBrowse () {
+    /*
+    TODO: Use css to better display levels (colours) (later), close when other opens
+     */
     let bod = document.getElementById("main-container")
     clearElement(bod)
 
@@ -80,49 +83,42 @@ function loadBrowse () {
     h3.appendChild(document.createTextNode("Aves"));
     bod.appendChild(h3);
 
-    let orders_list = document.createElement("div");
-    orders_list.classList.add("accordion","accordion-flush");
-    orders_list.id = "orders-list";
+    createBrowseLevel(3, "browse-accordion", bod);
+}
 
-    bod.appendChild(orders_list);
+function createBrowseLevel (level, parent_id, parent) {
+    let level_list = document.createElement("div");
+    level_list.classList.add("accordion","accordion-flush");
+    level_list.id = `${parent_id}-list`;
 
-    for (let o=0; o<5;o++) {
-        // Create accordion element
-        let item_id = `order-list-${o}`;
-        let item = createAccordionItem(item_id, o);
-        orders_list.appendChild(item);
+    level_list.hidden = true
+    parent.appendChild(level_list)
 
-        document.getElementById(`${item_id}-body`)
-            .appendChild(document.createTextNode("lorem ipsum lorem ipsum lorem lorem lorem")); // TODO: static
+    // TODO: fetch level data from back-end
+    for (let i=0; i<5; i++) {
+        let item_id = `${parent_id}-${i}`;
+        let item = createAccordionItem(item_id, item_id)
 
+        level_list.appendChild(item);
+        let item_bod = document.getElementById(`${item_id}-body`);
+        item_bod.appendChild(document.createTextNode("lorem ipsum lorem ipsum lorem lorem lorem"));
 
         // Set-up for loading when it is clicked
         document.getElementById(`${item_id}-opener`).addEventListener("click", () => {
-            if (!document.getElementById(`${item_id}-sublist`)) {
+
+            if (!document.getElementById(`${item_id}-list`)) {
                 // Use forEach later
-                let families_list = document.createElement("div");
-                families_list.classList.add("accordion", "ms-1", "mt-3");
-                families_list.id = `${item_id}-sublist`;
-                document.getElementById(`${item_id}-body`)
-                    .appendChild(families_list);
-
-                for (let f = 0; f < 5; f++) {
-                    let sub_item_id = `${item_id}-${f}`;
-                    let sub_item = createAccordionItem(sub_item_id, `${o}-${f}`);
-                    families_list.appendChild(sub_item)
-
-                    document.getElementById(`${sub_item_id}-body`)
-                        .appendChild(document.createTextNode("lorem ipsum lorem ipsum lorem lorem lorem"));
+                if (level > 0) {
+                    createBrowseLevel(level - 1, item_id, item_bod);
+                } else {
+                    // something else, to link to individual species
                 }
             }
         })
     }
-}
 
-function createBrowseLevel (level, parent_id) {
-    let list = document.createElement("div");
-    list.classList.add("accordion","accordion-flush");
-    list.id = `${parent_id}-list`;
+    level_list.hidden = false
+    return level_list
 }
 
 function loadAdd () {
@@ -147,7 +143,7 @@ function clearElement (element) {
     }
 }
 
-function createAccordionItem (item_id, title_text) {
+function createAccordionItem (item_id, title_text, parent_id) {
     // Create element
     let new_li = document.createElement("div");
     new_li.className = "accordion-item";
