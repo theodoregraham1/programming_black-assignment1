@@ -67,7 +67,7 @@ function loadIndex() {
 
 function loadBrowse () {
     /*
-    TODO: Use css to better display levels (colours) (later), close when other opens
+    TODO: Use css to better display levels (colours) (later)
      */
     let bod = document.getElementById("main-container")
     clearElement(bod)
@@ -97,7 +97,7 @@ function createBrowseLevel (level, parent_id, parent) {
     // TODO: fetch level data from back-end
     for (let i=0; i<5; i++) {
         let item_id = `${parent_id}-${i}`;
-        let item = createAccordionItem(item_id, item_id)
+        let item = createAccordionItem(item_id, item_id, level_list.id)
 
         level_list.appendChild(item);
         let item_bod = document.getElementById(`${item_id}-body`);
@@ -169,6 +169,7 @@ function createAccordionItem (item_id, title_text, parent_id) {
     let acc_collapse = document.createElement("div");
     acc_collapse.id = item_id;
     acc_collapse.classList.add("accordion-collapse", "collapse");
+    acc_collapse.setAttribute("data-bs-parent", `#${parent_id}`);
 
     let acc_body = document.createElement("div");
     acc_body.className = "accordion-body";
