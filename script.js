@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
 })
 
 const TAXONOMY_ORDER = ["Species", "Genus", "Family", "Order"];
+const ORDER_NAME = "Aves";
 
 function loadIndex() {
     let bod = document.getElementById("main-container")
@@ -146,14 +147,15 @@ function loadAdd () {
 
     let order_item = document.createElement("li");
     order_item.className = "breadcrumb-item";
-    order_item.appendChild(document.createTextNode("Aves"))
+    order_item.appendChild(document.createTextNode(ORDER_NAME))
     bread_ol.appendChild(order_item);
 
-    let level = 3;
-
     // Setup dropdown
-    let bread_dropdown = createBreadcrumbDropend(
-        [0,1,2,3,4,5], level);
+    let bread_dropdown = document.createElement("div");
+    bread_dropdown.className = "dropend";
+    bread_dropdown.id = "breadcrumb-dropdown"
+
+    createBreadcrumbDropdownInner(ORDER_NAME, 2, bread_dropdown);
 
     let drop_item = document.createElement("li");
     drop_item.id = "breadcrumb-dropdown-li"
@@ -161,24 +163,23 @@ function loadAdd () {
     drop_item.style.width = Math.ceil(bread_dropdown.clientWidth * 1.2);
     drop_item.appendChild(bread_dropdown);
     bread_ol.appendChild(drop_item);
-
-    bread_dropdown.lastChild.childNodes.forEach((node) => {
-        node.addEventListener(
-            "click",
-            () => update_breadcrumb(node.innerText, level-1)
-        );
-    })
 }
 
 function update_breadcrumb (choice, level) {
-    if (level > 0) {
-        let dropdown_container = document.getElementById("breadcrumb-dropdown-li");
+    let dropdown_container = document.getElementById("breadcrumb-dropdown-li");
 
-        let bread_item = document.createElement("li");
-        bread_item.className = "breadcrumb-item";
-        bread_item.appendChild(document.createTextNode(choice));
+    let bread_item = document.createElement("li");
+    bread_item.className = "breadcrumb-item";
+    bread_item.appendChild(document.createTextNode(choice));
 
-        dropdown_container.insertAdjacentElement("beforebegin", bread_item);
+    dropdown_container.insertAdjacentElement("beforebegin", bread_item);
+
+    if (level >= 0) {
+        // Reset dropdown
+        clearElement(dropdown_container);
+        createBreadcrumbDropdownInner(choice, level, dropdown_container);
+    } else {
+        dropdown_container.hidden = true;
     }
 }
 
@@ -238,10 +239,9 @@ function createAccordionItem (item_id, title_text, parent_id) {
     return new_li
 }
 
-function createBreadcrumbDropend (choices, level) {
-    let container = document.createElement("div");
-    container.className = "dropend";
-    container.id = "breadcrumb-dropdown"
+function createBreadcrumbDropdownInner (parent, level, container) {
+    // TODO: Fetch parent children
+    let choices = [0,1,2,3,4,5,6];
 
     let btn = document.createElement("span");
     btn.classList.add("dropdown-toggle", "badge", "bg-primary");
@@ -255,13 +255,13 @@ function createBreadcrumbDropend (choices, level) {
     options.className = "dropdown-menu";
     container.appendChild(options);
 
-    for (let i=0;i<choices.length; i++) {
+    for (let i=0; i < choices.length; i++) {
         let li = document.createElement("li");
         li.id = `breadcrumb-dropdown-option-${i}`
         li.className = "dropdown-item";
         li.appendChild(document.createTextNode(choices[i]));
         options.appendChild(li)
-    }
 
-    return container
+        li.addEventListener("click", () => update_breadcrumb(choices[i], level-1));
+    }
 }
