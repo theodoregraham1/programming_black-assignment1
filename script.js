@@ -152,7 +152,7 @@ function loadAdd () {
 
     // Setup dropdown
     let bread_dropdown = document.createElement("div");
-    bread_dropdown.className = "dropend";
+    bread_dropdown.className = "dropdown";
     bread_dropdown.id = "breadcrumb-dropdown"
 
     createBreadcrumbDropdownInner(ORDER_NAME, 2, bread_dropdown);
@@ -163,6 +163,35 @@ function loadAdd () {
     drop_item.style.width = Math.ceil(bread_dropdown.clientWidth * 1.2);
     drop_item.appendChild(bread_dropdown);
     bread_ol.appendChild(drop_item);
+
+    // Create taxon creator
+
+    /*
+    TODO: On mobile this should be vertically orientated, but it may be more effective if it has side to side stuff on desktop
+    like species can have their photo input off to the side
+     */
+    let form_div = document.createElement("div");
+    form_div.className = "row";
+    bod.appendChild(form_div);
+
+    let form = document.createElement("form");
+    form_div.appendChild(form);
+
+    let title_div = document.createElement("div");
+    title_div.classList.add("col-3", "mb-3")
+    form.append(title_div)
+
+    let title_input = document.createElement("input");
+    title_input.classList.add("form-control", "col-3");
+    title_div.appendChild(title_input);
+
+    let description_div = document.createElement("div");
+    description_div.classList.add("col-3", "mb-3")
+    form.appendChild(description_div)
+
+    let description_input = document.createElement("textarea")
+    description_input.classList.add("form-control", "col-3")
+    description_div.appendChild(description_input)
 }
 
 function update_breadcrumb (choice, level) {
@@ -178,6 +207,9 @@ function update_breadcrumb (choice, level) {
         // Reset dropdown
         clearElement(dropdown_container);
         createBreadcrumbDropdownInner(choice, level, dropdown_container);
+
+        // Edit taxon creator
+
     } else {
         dropdown_container.hidden = true;
     }
@@ -248,7 +280,7 @@ function createBreadcrumbDropdownInner (parent, level, container) {
     btn.ariaExpanded = "false";
     btn.type = "button";
     btn.setAttribute("data-bs-toggle", "dropdown");
-    btn.appendChild(document.createTextNode(TAXONOMY_ORDER[level]));
+    btn.appendChild(document.createTextNode("Select " +TAXONOMY_ORDER[level]));
     container.appendChild(btn);
 
     let options = document.createElement("ul");
