@@ -1,3 +1,5 @@
+"use strict";
+
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("nav-index-btn").addEventListener("click", loadIndex);
     document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse);
