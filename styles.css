@@ -1,0 +1,8 @@
+.zero-height {
+    max-height: 0;
+    overflow: hidden;
+}
+
+div {
+    transition: height 4s;
+}
