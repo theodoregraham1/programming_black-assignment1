@@ -15,44 +15,24 @@ app.use(express.static("static"));
 
 app.get("/", (req, res) => {
     res.redirect("index.html");
-})
+});
 
-const server = http.createServer((req, res) => {
+app.get("/index/cards", (req, res) => {
 
-    req.on("error", (err) => {
-        console.error(err);
-    })
-    res.on("error", (err) => {
-        console.error(err);
-    })
+});
 
-    const { url, method, headers } = req;
+app.get("/browse/:level/", (req, res) => {
 
-    console.log(`url accessed: ${url}`);
+});
 
-    if (staticFileMatcher.test(url)) {
-        // Gives access to all static files (in directory) but only those files
+app.post("/add/", (req, res) => {
 
-        const fileUrl = "." + url.match(staticFileMatcher)[0];
+});
 
-        const readStream = fs.createReadStream(fileUrl)
-            .on("error", (error) => {
-                console.error(error)
+app.post("/search/", (req, res) => {
 
-                res.statusCode = 400;
-                res.end();
-            });
-
-        res.statusCode = 200;
-        res.setHeader("content-type", "html"); // fixme
-
-        readStream.pipe(res);
-    } else if (url === "/") {
-        res.redirect ="/static/index.html";
-        res.end()
-    }
 });
 
 app.listen(port, hostname, () => {
     console.log(`http://${hostname}:${port}`)
-})
+});
