@@ -6,7 +6,8 @@ const fs = require("node:fs");
 const hostname = "127.0.0.1";
 const port = 8080;
 
-const fileRegex = /\/\w+\.\w+/;
+const staticFileMatcher = /\/static\/\w+\.\w+/;
+
 
 const server = http.createServer((req, res) => {
 
@@ -19,23 +20,31 @@ const server = http.createServer((req, res) => {
 
     const { url, method, headers } = req;
 
-    if (fileRegex.test(url)) {
-        // FIXME: this assumes all files are in the same directory and gives access to ALL files in that directory
-        res.statusCode = 200;
-        res.setHeader("content-type", "html");
+    console.log(`url accessed: ${url}`);
 
-        const readStream = fs.createReadStream(`.${url}`);
-        let fileData = []
-        readStream
-            .on("data", (chunk) => {
-                res.write(chunk.toString());
-            })
-            .on("end", () => {
+    if (staticFileMatcher.test(url)) {
+        // Gives access to all static files (in directory) but only those files
+
+        const fileUrl = "." + url.match(staticFileMatcher)[0];
+
+        const readStream = fs.createReadStream(fileUrl)
+            .on("error", (error) => {
+                console.error(error)
+
+                res.statusCode = 400;
                 res.end();
             });
+
+        res.statusCode = 200;
+        res.setHeader("content-type", "html"); // fixme
+
+        readStream.pipe(res);
+    } else if (url === "/") {
+        res.redirect ="/static/index.html";
+        res.end()
     }
 });
 
 server.listen(port, hostname, () => {
-    console.log(`http://${hostname}:${port}/index.html`)
+    console.log(`http://${hostname}:${port}`)
 })
