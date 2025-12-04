@@ -4,10 +4,10 @@ const http = require("node:http");
 const express = require("express");
 const fs = require("node:fs");
 
+var taxoms = require("./taxoms.json");
+
 const hostname = "127.0.0.1";
 const port = 8080;
-
-const staticFileMatcher = /\/static\/\w+\.\w+/;
 
 const app = express();
 
