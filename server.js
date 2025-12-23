@@ -1,13 +1,33 @@
 "use strict";
 
-const http = require("node:http");
 const express = require("express");
 const fs = require("node:fs");
 
-var taxoms = require("./taxoms.json");
-
 const hostname = "127.0.0.1";
 const port = 8080;
+
+const TAXOMS_FILENAME = "./taxoms.json";
+try {
+    var taxoms_data = JSON.parse(fs.readFileSync(TAXOMS_FILENAME, "utf-8"));
+} catch (e) {
+    // If it does not exist, create it with just Aves in it
+    taxoms_data = [{
+        id: 0,
+        name: "Aves",
+        description: "The order containing all birds",
+        parent: null
+    }]
+    fs.writeFileSync(TAXOMS_FILENAME, JSON.stringify(taxoms_data))
+}
+
+const BIRDS_FILENAME = "./birds.json";
+try {
+    var birds_data = JSON.parse(fs.readFileSync(BIRDS_FILENAME, "utf-8"));
+} catch (e) {
+    birds_data = [];
+    fs.writeFileSync(BIRDS_FILENAME, JSON.stringify(birds_data));
+}
+
 
 const app = express();
 
@@ -17,8 +37,8 @@ app.get("/", (req, res) => {
     res.redirect("index.html");
 });
 
-app.get("/index/cards", (req, res) => {
-
+app.get("/index/card/", (req, res) => {
+    let id = Math.floor(Math.random()*birds_data.size)
 });
 
 app.get("/browse/:level/", (req, res) => {
@@ -26,7 +46,9 @@ app.get("/browse/:level/", (req, res) => {
 });
 
 app.post("/add/", (req, res) => {
+    // Data per bird: genus, picture, name, id, description
 
+    birds_data.size()
 });
 
 app.post("/search/", (req, res) => {
@@ -34,5 +56,5 @@ app.post("/search/", (req, res) => {
 });
 
 app.listen(port, hostname, () => {
-    console.log(`http://${hostname}:${port}`)
+    console.log(`Server running at http://${hostname}:${port}`)
 });
