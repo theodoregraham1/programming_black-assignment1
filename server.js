@@ -28,7 +28,6 @@ try {
     fs.writeFileSync(BIRDS_FILENAME, JSON.stringify(birds_data));
 }
 
-
 const app = express();
 
 app.use(express.static("static"));
@@ -38,7 +37,9 @@ app.get("/", (req, res) => {
 });
 
 app.get("/index/card/", (req, res) => {
-    let id = Math.floor(Math.random()*birds_data.size)
+    let id = Math.floor(Math.random()*birds_data.size);
+
+    let bird = birds_data
 });
 
 app.get("/browse/:level/", (req, res) => {
@@ -58,3 +59,12 @@ app.post("/search/", (req, res) => {
 app.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}`)
 });
+
+function findByID(data, id) {
+    for (let i=0; i<data.size; i++) {
+        if (data[i].id === id) {
+            return data[i];
+        }
+    }
+    return null
+}
