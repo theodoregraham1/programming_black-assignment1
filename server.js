@@ -7,6 +7,7 @@ const hostname = "127.0.0.1";
 const port = 8080;
 
 // Files
+// Images could be served locally, however I believe this falls out of scope for the project
 const TAXOMS_FILENAME = "./taxoms.json";
 try {
     var taxoms_data = JSON.parse(fs.readFileSync(TAXOMS_FILENAME, "utf-8"));

@@ -147,6 +147,7 @@ function loadAdd () {
 
     // Setup breadcrumb
     let breadcrumb = document.createElement("nav");
+    breadcrumb.classList.add("mx-auto", "col-md-6")
     breadcrumb.ariaLabel = "breadcrumb";
     bod.appendChild(breadcrumb);
 
@@ -174,37 +175,64 @@ function loadAdd () {
     drop_item.appendChild(bread_dropdown);
     bread_ol.appendChild(drop_item);
 
-    // Create taxon creator
-
-    /*
-    TODO: On mobile this should be vertically orientated, but it may be more effective if it has side to side stuff on desktop
-    like species can have their photo input off to the side
-     */
+    // Make div for stuff to go in
     let form_div = document.createElement("div");
     form_div.className = "row";
+    form_div.id = "add-form-div";
     bod.appendChild(form_div);
 
+    let holder_div = document.createElement("div");
+    holder_div.classList.add("col-3", "mb-3", "mx-auto");
+    holder_div.appendChild(document.createTextNode("Select taxonomy level to add child to"));
+    form_div.appendChild(holder_div);
+}
+
+function loadBirdCreator() {
+    // Create bird creator
+    // TODO: Think about UX
+    let container = document.getElementById("add-form-div");
+    clearElement(container);
+
     let form = document.createElement("form");
-    form_div.appendChild(form);
+    container.appendChild(form);
 
     let title_div = document.createElement("div");
-    title_div.classList.add("col-3", "mb-3")
+    title_div.classList.add("col-3", "mb-3", "mx-auto")
     form.append(title_div)
 
     let title_input = document.createElement("input");
-    title_input.classList.add("form-control", "col-3");
+    title_input.classList.add("form-control");
+    title_input.type = "text";
+    title_input.placeholder = "Name";
+    title_input.name = "name";
     title_div.appendChild(title_input);
 
     let description_div = document.createElement("div");
-    description_div.classList.add("col-3", "mb-3")
-    form.appendChild(description_div)
+    description_div.classList.add("col-3", "mb-3", "mx-auto");
+    form.appendChild(description_div);
 
     let description_input = document.createElement("textarea")
-    description_input.classList.add("form-control", "col-3")
-    description_div.appendChild(description_input)
+    description_input.classList.add("form-control")
+    description_input.placeholder = "Bird description"
+    title_input.name = "description";
+    description_div.appendChild(description_input);
+
+    let picture_div = document.createElement("div");
+    picture_div.classList.add("col-3", "mb-3", "mx-auto");
+    form.appendChild(picture_div);
+
+    let picture_input = document.createElement("input")
+    picture_input.classList.add("form-control")
+    picture_input.type = "url";
+    picture_input.placeholder = "Picture URL"
+    picture_input.name = "picture";
+    picture_div.appendChild(picture_input)
+
+    // Give picture preview
 }
 
 function update_breadcrumb (choice, level) {
+    // TODO: Back button
     let dropdown_container = document.getElementById("breadcrumb-dropdown-li");
 
     let bread_item = document.createElement("li");
@@ -219,6 +247,7 @@ function update_breadcrumb (choice, level) {
         createBreadcrumbDropdownInner(choice, level, dropdown_container);
     } else {
         dropdown_container.hidden = true;
+        loadBirdCreator()
     }
 }
 
@@ -287,7 +316,7 @@ function createBreadcrumbDropdownInner (parent, level, container) {
     btn.ariaExpanded = "false";
     btn.type = "button";
     btn.setAttribute("data-bs-toggle", "dropdown");
-    btn.appendChild(document.createTextNode("Select " +TAXONOMY_ORDER[level]));
+    btn.appendChild(document.createTextNode("Select " + TAXONOMY_ORDER[level]));
     container.appendChild(btn);
 
     let options = document.createElement("ul");
