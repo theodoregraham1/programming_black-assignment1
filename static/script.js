@@ -42,6 +42,7 @@ async function loadIndex() {
         try {
             let response = await fetch("index/card");
             let data = await response.json();
+            console.log(data);
 
             let img = document.createElement("img");
             img.alt = "Image of a bird"; // do
@@ -51,8 +52,6 @@ async function loadIndex() {
         } catch (e) {
             alert(e);
         }
-
-
 
         let card_title = document.createElement("h4");
         card_title.className = "card-title";
@@ -214,13 +213,10 @@ function update_breadcrumb (choice, level) {
 
     dropdown_container.insertAdjacentElement("beforebegin", bread_item);
 
-    if (level >= 0) {
+    if (level >= 1) {
         // Reset dropdown
         clearElement(dropdown_container);
         createBreadcrumbDropdownInner(choice, level, dropdown_container);
-
-        // Edit taxon creator
-
     } else {
         dropdown_container.hidden = true;
     }
@@ -300,11 +296,17 @@ function createBreadcrumbDropdownInner (parent, level, container) {
 
     for (let i=0; i < choices.length; i++) {
         let li = document.createElement("li");
-        li.id = `breadcrumb-dropdown-option-${i}`
+        li.id = `breadcrumb-dropdown-option-${level}-${i}`
         li.className = "dropdown-item";
         li.appendChild(document.createTextNode(choices[i]));
         options.appendChild(li)
 
         li.addEventListener("click", () => update_breadcrumb(choices[i], level-1));
     }
+
+    let new_li = document.createElement("li");
+    new_li.id = `breadcrumb-dropdown-${level}-new`
+    new_li.className = "dropdown-item";
+    new_li.appendChild(document.createTextNode(`Create new ${TAXONOMY_ORDER[level]}`));
+    options.appendChild(new_li)
 }

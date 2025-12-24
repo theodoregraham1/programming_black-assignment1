@@ -6,6 +6,7 @@ const fs = require("node:fs");
 const hostname = "127.0.0.1";
 const port = 8080;
 
+// Files
 const TAXOMS_FILENAME = "./taxoms.json";
 try {
     var taxoms_data = JSON.parse(fs.readFileSync(TAXOMS_FILENAME, "utf-8"));
@@ -39,17 +40,61 @@ app.get("/", (req, res) => {
 app.get("/index/card/", (req, res) => {
     let id = Math.floor(Math.random()*birds_data.size);
 
-    let bird = birds_data
+    let bird = findByID(birds_data, id)
+
+    res.send(JSON.stringify(bird))
 });
 
 app.get("/browse/:level/", (req, res) => {
 
 });
 
-app.post("/add/", (req, res) => {
+app.post("/add/species/", (req, res) => {
     // Data per bird: genus, picture, name, id, description
 
-    birds_data.size()
+    // Validate data
+    let [name, genus, picture, description]  = req.body;
+
+    if (!name || !genus || !description) {
+        res.statusCode = 406;
+        res.send("Error: missing data from request")
+    }
+
+    birds_data.add({
+        "id": birds_data.size, // If you allow deletion, this will produce duplicates
+        "name": name,
+        "genus": genus,
+        "picture": picture,
+        "description": description
+    });
+
+    fs.writeFile(BIRDS_FILENAME, JSON.stringify(birds_data)); // There's a better way to write this
+
+    res.statusCode = 200;
+    res.send();
+});
+
+app.post("/add/level/", (req, res) => {
+    // Data per level: parent, name, description, id
+
+    let [parent, name, description] = req.body;
+
+    if (!name || !parent || !description) {
+        res.statusCode = 406;
+        res.send("Error: missing data from request")
+    }
+
+    taxoms_data.add({
+        "id": taxoms_data.size,
+        "name": name,
+        "parent": parent,
+        "description": description
+    });
+
+    fs.writeFile(TAXOMS_FILENAME, JSON.stringify(taxoms_data));
+
+    res.statusCode = 200;
+    res.send();
 });
 
 app.post("/search/", (req, res) => {
