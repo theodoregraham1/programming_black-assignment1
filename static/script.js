@@ -141,7 +141,7 @@ function loadAdd () {
     clearElement(bod);
 
     let h2 = document.createElement("h2");
-    h2.classList.add("mb-3", "text-center");
+    h2.classList.add("my-3", "text-center");
     h2.appendChild(document.createTextNode("Add"));
     bod.appendChild(h2);
 
@@ -177,7 +177,6 @@ function loadAdd () {
 
     // Make div for stuff to go in
     let form_div = document.createElement("div");
-    form_div.className = "row";
     form_div.id = "add-form-div";
     bod.appendChild(form_div);
 
@@ -194,11 +193,17 @@ function loadBirdCreator() {
     clearElement(container);
 
     let form = document.createElement("form");
+    form.classList.add("row", "mx-5");
+    form.action = "submit_bird_creator()";
     container.appendChild(form);
 
+    let inputs_div = document.createElement("div");
+    inputs_div.classList.add("col-md-6", "ms-auto");
+    form.appendChild(inputs_div);
+
     let title_div = document.createElement("div");
-    title_div.classList.add("col-3", "mb-3", "mx-auto")
-    form.append(title_div)
+    title_div.classList.add("mb-3", "mx-auto")
+    inputs_div.append(title_div)
 
     let title_input = document.createElement("input");
     title_input.classList.add("form-control");
@@ -208,8 +213,8 @@ function loadBirdCreator() {
     title_div.appendChild(title_input);
 
     let description_div = document.createElement("div");
-    description_div.classList.add("col-3", "mb-3", "mx-auto");
-    form.appendChild(description_div);
+    description_div.classList.add("mb-3", "mx-auto");
+    inputs_div.appendChild(description_div);
 
     let description_input = document.createElement("textarea")
     description_input.classList.add("form-control")
@@ -218,8 +223,8 @@ function loadBirdCreator() {
     description_div.appendChild(description_input);
 
     let picture_div = document.createElement("div");
-    picture_div.classList.add("col-3", "mb-3", "mx-auto");
-    form.appendChild(picture_div);
+    picture_div.classList.add("mb-3", "mx-auto");
+    inputs_div.appendChild(picture_div);
 
     let picture_input = document.createElement("input")
     picture_input.classList.add("form-control")
@@ -228,7 +233,42 @@ function loadBirdCreator() {
     picture_input.name = "picture";
     picture_div.appendChild(picture_input)
 
+    let submit_button = document.createElement("button");
+    submit_button.classList.add("btn", "btn-success");
+    submit_button.appendChild(document.createTextNode("Add new bird"))
+    inputs_div.appendChild(submit_button);
+
     // Give picture preview
+    let preview_div = document.createElement("div");
+    preview_div.classList.add("col-md-6", "me-auto", "border")
+    form.appendChild(preview_div);
+
+    let preview_label = document.createElement("h5");
+    preview_label.classList.add("mx-auto", "pt-3")
+    preview_label.appendChild(document.createTextNode("Picture preview"));
+    preview_div.appendChild(preview_label);
+
+    let picture_preview = document.createElement("img");
+    picture_preview.hidden = true;
+    picture_preview.ariaHidden = "hidden";
+    picture_preview.classList.add("p-3", "mx-auto", "object-fit-contain");
+    picture_preview.width = Math.ceil(preview_div.clientWidth * 0.7);
+    preview_div.appendChild(picture_preview)
+
+    picture_input.addEventListener("input", () => {
+        picture_preview.src = picture_input.value;
+        picture_preview.hidden = false;
+        picture_preview.ariaHidden = "show";
+    });
+
+    window.addEventListener("resize", () => {
+        console.log(preview_div.clientWidth);
+        picture_preview.width = Math.ceil(preview_div.clientWidth * 0.7);
+    });
+}
+
+function submit_bird_creator() {
+
 }
 
 function update_breadcrumb (choice, level) {
