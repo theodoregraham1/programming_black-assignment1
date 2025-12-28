@@ -96,7 +96,7 @@ app.post("/add/level/", (req, res) => {
         res.send("Error: missing data from request")
     }
 
-    taxa_data.add({
+    taxa_data.push({
         "id": taxa_data.size,
         "name": name,
         "parent": parent,
@@ -111,6 +111,8 @@ app.post("/add/level/", (req, res) => {
         }
     });
 
+    console.log("/add/level/: New taxon successfully written to file")
+
     res.statusCode = 200;
     res.send();
 });
@@ -120,7 +122,7 @@ app.post("/search/", (req, res) => {
 });
 
 app.get("/get/entity/:type/:id", (req, res) => {
-    const {type, id} = req.params;
+    let {type, id} = req.params;
 
     res.contentType("application/json");
 
@@ -130,6 +132,8 @@ app.get("/get/entity/:type/:id", (req, res) => {
     }
 
     try {
+        id = parseInt(id);
+
         let data;
         switch (type) {
             case "taxon":
@@ -142,7 +146,6 @@ app.get("/get/entity/:type/:id", (req, res) => {
                 // Premature break on error
                 throw new Error("Invalid type")
         }
-
         res.statusCode = 200;
         res.send(JSON.stringify(data));
     } catch (e) {
@@ -177,10 +180,10 @@ function findByID(data, id) {
 
 function findByField(data, field, value) {
     let out = []
-    for (let i=0; i<data.size; i++) {
-        if (data[i][field] === value) {
-            out.push(data[i]);
+    data.forEach(d => {
+        if (d[field] === value) {
+            out.push(d);
         }
-    }
+    })
     return out;
 }

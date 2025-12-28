@@ -1,17 +1,18 @@
 "use strict";
 
-document.addEventListener("DOMContentLoaded", () => {
+// TODO: Error handling for all fetches
+
+const TAXONOMY_ORDER = ["Species", "Genus", "Family", "Order"];
+let ORDER;
+
+document.addEventListener("DOMContentLoaded", async function () {
+    ORDER = await getTaxon(0);
     document.getElementById("nav-index-btn").addEventListener("click", loadIndex);
     document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse);
     document.getElementById("nav-add-btn").addEventListener("click", loadAdd)
 
     loadAdd();
 })
-
-const TAXONOMY_ORDER = ["Species", "Genus", "Family", "Order"];
-// Get order data
-const ORDER = await fetch("get/entity/taxon/0")
-    .then(response => response.json())
 
 async function loadIndex() {
     let bod = document.getElementById("main-container")
@@ -95,7 +96,7 @@ function loadBrowse () {
 
     let h3 = document.createElement("h3");
     h3.className = "mb-3";
-    h3.appendChild(document.createTextNode("Aves"));
+    h3.appendChild(document.createTextNode(ORDER.name));
     bod.appendChild(h3);
 
     createBrowseLevel(3, "browse-accordion", bod);
@@ -197,7 +198,7 @@ function loadGeneralCreator() {
     container.appendChild(form);
 
     let inputs_div = document.createElement("div");
-    inputs_div.classList.add("col-md-6", "ms-auto");
+    inputs_div.classList.add("col-md-6");
     inputs_div.id = "add-form-inputs";
     form.appendChild(inputs_div);
 
@@ -230,7 +231,8 @@ function loadGeneralCreator() {
 function loadBirdCreator(genus) {
     // Create bird creator form
     let form = loadGeneralCreator();
-    let inputs_div = document.getElementById("add-form-inputs-div");
+    let inputs_div = document.getElementById("add-form-inputs");
+    inputs_div.classList.add("ms-auto");
 
     let picture_div = document.createElement("div");
     picture_div.classList.add("mb-3", "mx-auto");
@@ -296,10 +298,17 @@ function loadBirdCreator(genus) {
 
 }
 
-function loadTaxonCreator(parent) {
+function loadTaxonCreator(parent, level) {
     let form = loadGeneralCreator();
+    let inputs_div = document.getElementById("add-form-inputs");
+    inputs_div.classList.add("mx-auto");
 
     // TODO: Show other children of the parent to the side
+
+    let submit_button = document.createElement("button");
+    submit_button.classList.add("btn", "btn-success");
+    submit_button.appendChild(document.createTextNode(`Add new ${TAXONOMY_ORDER[level]}`))
+    inputs_div.appendChild(submit_button);
 
     form.addEventListener("submit", async function (event) {
         event.preventDefault();
@@ -424,7 +433,14 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
     new_li.appendChild(document.createTextNode(`Create new ${TAXONOMY_ORDER[level]}`));
     options.appendChild(new_li)
 
-    new_li.addEventListener("click", () => loadTaxonCreator(parent))
+    new_li.addEventListener("click", () => loadTaxonCreator(parent, level))
+}
+
+async function getTaxon(id) {
+    // TODO: Error handling
+    let response = await fetch(`get/entity/taxon/${id}`)
+
+    return await response.json()
 }
 
 function clearElement (element) {
