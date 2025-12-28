@@ -169,7 +169,7 @@ function loadAdd () {
     bread_dropdown.className = "dropdown";
     bread_dropdown.id = "breadcrumb-dropdown"
 
-    createBreadcrumbDropdownInner(ORDER.id, 2, bread_dropdown);
+    createBreadcrumbDropdownInner(ORDER, 2, bread_dropdown);
 
     let drop_item = document.createElement("li");
     drop_item.id = "breadcrumb-dropdown-li"
@@ -283,7 +283,7 @@ function loadBirdCreator(genus) {
 
         let data = new FormData(form);
         data = Object.fromEntries(data.entries());
-        data.genus = genus;
+        data.genus = genus.id;
         let response = await fetch("/add/species/", {
             method: "POST",
             headers: {
@@ -299,6 +299,7 @@ function loadBirdCreator(genus) {
 }
 
 function loadTaxonCreator(parent, level) {
+    console.log(parent)
     let form = loadGeneralCreator();
     let inputs_div = document.getElementById("add-form-inputs");
     inputs_div.classList.add("mx-auto");
@@ -315,7 +316,7 @@ function loadTaxonCreator(parent, level) {
 
         let data = new FormData(form);
         data = Object.fromEntries(data.entries());
-        data.parent = parent;
+        data.parent = parent.id;
         let response = await fetch("add/level/", {
             method: "POST",
             headers: {
@@ -335,7 +336,7 @@ function update_breadcrumb (choice, level) {
 
     let bread_item = document.createElement("li");
     bread_item.className = "breadcrumb-item";
-    bread_item.appendChild(document.createTextNode(choice));
+    bread_item.appendChild(document.createTextNode(choice.name));
 
     dropdown_container.insertAdjacentElement("beforebegin", bread_item);
 
@@ -402,7 +403,7 @@ function createAccordionItem (item_id, title_text, parent_id) {
 }
 
 async function createBreadcrumbDropdownInner (parent, level, container) {
-    let response = await fetch(`get/levels/${parent}`);
+    let response = await fetch(`get/levels/${parent.id}`);
     let choices = await response.json();
 
     let btn = document.createElement("span");
@@ -424,7 +425,7 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
         li.appendChild(document.createTextNode(choices[i].name));
         options.appendChild(li)
 
-        li.addEventListener("click", () => update_breadcrumb(choices[i].id, level-1));
+        li.addEventListener("click", () => update_breadcrumb(choices[i], level-1));
     }
 
     let new_li = document.createElement("li");

@@ -51,6 +51,7 @@ app.get("/browse/:level/", (req, res) => {
 
 });
 
+// For adding check that the item doesn't already exist, if it does replace it
 app.post("/add/species/", (req, res) => {
     // Data per bird: genus, picture, name, id, description
 
@@ -60,9 +61,10 @@ app.post("/add/species/", (req, res) => {
     if (!name || !genus || !description) {
         res.statusCode = 406;
         res.send("Error: missing data from request")
+        return;
     }
     let bird = {
-        "id": birds_data.size, // If you allow deletion, this will produce duplicates
+        "id": birds_data.length, // If you allow deletion, this will produce duplicates
         "name": name,
         "genus": genus,
         "picture": picture,
@@ -71,7 +73,7 @@ app.post("/add/species/", (req, res) => {
     birds_data.push(bird);
 
     // Non-blocking write to file
-    fs.writeFile(BIRDS_FILENAME, JSON.stringify(birds_data), (err) => {
+    fs.writeFile(BIRDS_FILENAME, JSON.stringify(birds_data, null, 4), (err) => {
         if (err) {
             res.statusCode = 500;
             res.contentType("text/plain")
@@ -88,22 +90,24 @@ app.post("/add/species/", (req, res) => {
 
 app.post("/add/level/", (req, res) => {
     // Data per level: parent, name, description, id
-    console.log(req.body);
     let {parent, name, description} = req.body;
 
-    if (!name || !parent || !description) {
+    if (!name || (!parent && !(parent === 0)) || !description) {
         res.statusCode = 406;
-        res.send("Error: missing data from request")
+        res.send("Error: missing data from request");
+        return;
     }
 
-    taxa_data.push({
-        "id": taxa_data.size,
+    let taxon = {
+        "id": taxa_data.length,
         "name": name,
-        "parent": parent,
-        "description": description
-    });
+        "description": description,
+        "parent": parent
+    };
 
-    fs.writeFile(TAXA_FILENAME, JSON.stringify(taxa_data), (err) => {
+    taxa_data.push(taxon);
+
+    fs.writeFile(TAXA_FILENAME, JSON.stringify(taxa_data, null, 4), (err) => {
         if (err) {
             res.statusCode = 500;
             res.contentType("text/plain")
@@ -114,7 +118,7 @@ app.post("/add/level/", (req, res) => {
     console.log("/add/level/: New taxon successfully written to file")
 
     res.statusCode = 200;
-    res.send();
+    res.send(taxon);
 });
 
 app.post("/search/", (req, res) => {
@@ -155,7 +159,7 @@ app.get("/get/entity/:type/:id", (req, res) => {
 });
 
 app.get("/get/levels/:parent", (req, res) => {
-    const {parent} = req.params;
+    let  {parent} = req.params;
 
     res.contentType("application/json");
 
@@ -163,6 +167,8 @@ app.get("/get/levels/:parent", (req, res) => {
         res.statusCode = 406;
         res.send(JSON.stringify({}));
     }
+
+    parent = parseInt(parent);
 
     let children = findByField(taxa_data, "parent", parent);
 
