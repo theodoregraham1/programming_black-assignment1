@@ -286,6 +286,10 @@ function loadBirdCreator(genus) {
 
 }
 
+function loadTaxomCreator(parent) {
+
+}
+
 function update_breadcrumb (choice, level) {
     // TODO: Back button
     let dropdown_container = document.getElementById("breadcrumb-dropdown-li");
@@ -363,8 +367,9 @@ function createAccordionItem (item_id, title_text, parent_id) {
     return new_li
 }
 
-function createBreadcrumbDropdownInner (parent, level, container) {
+async function createBreadcrumbDropdownInner (parent, level, container) {
     // TODO: Fetch parent children
+    let response = await fetch();
     let choices = [0,1,2,3,4,5,6];
 
     let btn = document.createElement("span");
@@ -394,4 +399,6 @@ function createBreadcrumbDropdownInner (parent, level, container) {
     new_li.className = "dropdown-item";
     new_li.appendChild(document.createTextNode(`Create new ${TAXONOMY_ORDER[level]}`));
     options.appendChild(new_li)
+
+    new_li.addEventListener("click", () => loadTaxomCreator(parent))
 }

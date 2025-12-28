@@ -89,7 +89,7 @@ app.post("/add/species/", (req, res) => {
 app.post("/add/level/", (req, res) => {
     // Data per level: parent, name, description, id
     console.log(req.body);
-    let [parent, name, description] = req.body;
+    let {parent, name, description} = req.body;
 
     if (!name || !parent || !description) {
         res.statusCode = 406;
@@ -103,7 +103,13 @@ app.post("/add/level/", (req, res) => {
         "description": description
     });
 
-    fs.writeFile(TAXOMS_FILENAME, JSON.stringify(taxoms_data));
+    fs.writeFile(TAXOMS_FILENAME, JSON.stringify(taxoms_data), (err) => {
+        if (err) {
+            res.statusCode = 500;
+            res.contentType("text/plain")
+            res.send("Error in writing new entry to file");
+        }
+    });
 
     res.statusCode = 200;
     res.send();
@@ -112,6 +118,16 @@ app.post("/add/level/", (req, res) => {
 app.post("/search/", (req, res) => {
 
 });
+
+app.get("/get/levels/:parent", (req, res) => {
+    const {parent} = req.params;
+
+    let children = findByField(taxoms_data, "parent", parent);
+
+    res.statusCode = 200;
+    res.contentType("application/json");
+    res.send(JSON.stringify(children));
+})
 
 app.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}`)
@@ -124,4 +140,14 @@ function findByID(data, id) {
         }
     }
     return null
+}
+
+function findByField(data, field, value) {
+    let out = []
+    for (let i=0; i<data.size; i++) {
+        if (data[i][field] === value) {
+            out.push(data[i]);
+        }
+    }
+    return out;
 }
