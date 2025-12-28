@@ -9,8 +9,9 @@ const port = 8080;
 // Files
 // Images could be served locally, however I believe this falls out of scope for the project
 const TAXA_FILENAME = "./taxa.json";
+let taxa_data
 try {
-    var taxa_data = JSON.parse(fs.readFileSync(TAXA_FILENAME, "utf-8"));
+    taxa_data = JSON.parse(fs.readFileSync(TAXA_FILENAME, "utf-8"));
 } catch (e) {
     // If it does not exist, create it with just Aves in it
     taxa_data = [{
@@ -23,9 +24,11 @@ try {
 }
 
 const BIRDS_FILENAME = "./birds.json";
+let birds_data;
 try {
-    var birds_data = JSON.parse(fs.readFileSync(BIRDS_FILENAME, "utf-8"));
+    birds_data = JSON.parse(fs.readFileSync(BIRDS_FILENAME, "utf-8"));
 } catch (e) {
+    // TODO: Maybe add new field: species (latin name)
     birds_data = [];
     fs.writeFileSync(BIRDS_FILENAME, JSON.stringify(birds_data));
 }
@@ -39,12 +42,31 @@ app.get("/", (req, res) => {
     res.redirect("index.html");
 });
 
-app.get("/index/card/", (req, res) => {
-    let id = Math.floor(Math.random()*birds_data.size);
+app.get("/index/cards/:n", (req, res) => {
+    let {n} = req.params;
 
-    let bird = findByID(birds_data, id)
+    if (n > birds_data.length) {
+        res.statusCode = 200;
+        res.contentType("application/json");
+        res.send(JSON.stringify(birds_data));
+        return;
+    }
 
-    res.send(JSON.stringify(bird))
+    let birds = []
+    for (let i=0; i<n; i++) {
+        let id = Math.floor(Math.random() * birds_data.length);
+
+        let bird = findByID(birds_data, id);
+        if (!bird || findByID(birds, id)) {
+            i--;
+        } else {
+            birds.push(bird);
+        }
+    }
+
+    res.statusCode = 200;
+    res.contentType("application/json");
+    res.send(JSON.stringify(birds))
 });
 
 app.get("/browse/:level/", (req, res) => {
@@ -148,7 +170,9 @@ app.get("/get/entity/:type/:id", (req, res) => {
                 break;
             default:
                 // Premature break on error
-                throw new Error("Invalid type")
+                res.statusCode = 404;
+                res.send("Invalid entity type");
+                return;
         }
         res.statusCode = 200;
         res.send(JSON.stringify(data));

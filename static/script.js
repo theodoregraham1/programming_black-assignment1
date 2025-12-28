@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse);
     document.getElementById("nav-add-btn").addEventListener("click", loadAdd)
 
-    loadAdd();
+    await loadIndex();
 })
 
 async function loadIndex() {
@@ -21,76 +21,82 @@ async function loadIndex() {
     h2.appendChild(document.createTextNode("Home"));
     bod.appendChild(h2);
 
+    const NUMBER_OF_CARDS = 3;
     let row = document.createElement("div");
     row.className = "row";
 
-    for (let i=0;i<3;i++) {
-        // FIXME: these go too large when they become multirow
+    try {
+        let response = await fetch(`index/cards/${NUMBER_OF_CARDS}`);
+        let content = await response.json();
 
-        // Constant elements
-        let col = document.createElement("div");
-        col.classList.add("col-lg-auto", "mb-3");
-
-        let card = document.createElement("div");
-        card.className = "card";
-        col.appendChild(card);
-
-        let card_bod = document.createElement("div");
-        card_bod.className = "card-body";
-        card.appendChild(card_bod);
-
-        let img = document.createElement("img");
-        img.alt = "..."; // do
-        img.className = "card-img-top";
-        card.appendChild(img);
-
-        let card_title = document.createElement("h4");
-        card_title.className = "card-title";
-        card_bod.appendChild(card_title);
-
-        let card_text = document.createElement("p");
-        card_text.className = "card-text";
-        card_bod.appendChild(card_text);
-
-        let card_btn = document.createElement("button");
-        card_btn.classList.add("btn", "btn-primary");
-        card_btn.appendChild(document.createTextNode("Read more"));
-        card_bod.appendChild(card_btn);
-
-        try {
-            // Maybe change this to send all cards
-            let response = await fetch("index/card");
-
-            let {id, name, description, picture} = await response.json();
-
-            img.src = picture;
-            card_title.appendChild(document.createTextNode(name));
-
-            card_text.appendChild(document.createTextNode(description));
-            card_btn.id = `card-${id}-btn`;
-            card_btn.addEventListener("click", () => loadBird(id))
-
-        } catch (e) {
-            // Replace it with placeholder
-            img.src = "...";
-
-            card_title.classList.add("placeholder-glow");
-            let title_holder = document.createElement("span");
-            title_holder.classList.add("col-6", "placeholder");
-            card_title.appendChild(title_holder)
-
-            for (let i=0; i<3; i++) {
-                let description_holder = document.createElement("span");
-                description_holder.classList.add("col-8", "placeholder");
-                card_text.appendChild(description_holder)
-            }
-        }
-
-        row.appendChild(col)
+        content.forEach(bird => row.appendChild(makeCard(bird)));
+    } catch (e) {
+        alert(e);
     }
     bod.appendChild(row);
+}
 
-    // TODO: Dynamic cards, and reflect this in links with listeners
+function makeCard(data) {
+    // Constant elements
+    let col = document.createElement("div");
+    col.classList.add("col-lg-auto", "mb-3");
+
+    let card = document.createElement("div");
+    card.className = "card";
+    col.appendChild(card);
+
+    let img = document.createElement("img");
+    img.alt = "..."; // do
+    img.className = "card-img-top";
+    console.log(card.clientWidth);
+    img.style.width = "300px";
+    card.style.maxWidth = "300px";
+    card.appendChild(img);
+
+    let card_bod = document.createElement("div");
+    card_bod.className = "card-body";
+    card.appendChild(card_bod);
+
+    let card_title = document.createElement("h4");
+    card_title.className = "card-title";
+    card_bod.appendChild(card_title);
+
+    let card_text = document.createElement("p");
+    card_text.className = "card-text";
+    card_bod.appendChild(card_text);
+
+    let card_btn = document.createElement("button");
+    card_btn.classList.add("btn", "btn-primary");
+    card_btn.appendChild(document.createTextNode("Read more"));
+    card_bod.appendChild(card_btn);
+
+    try {
+        let {id, name, description, picture} = data;
+
+        img.src = picture;
+        card_title.appendChild(document.createTextNode(name));
+
+        card_text.appendChild(document.createTextNode(description));
+        card_btn.id = `card-${id}-btn`;
+        card_btn.addEventListener("click", () => loadBird(id))
+
+    } catch (e) {
+        // Replace it with placeholder
+        img.src = "...";
+
+        card_title.classList.add("placeholder-glow");
+        let title_holder = document.createElement("span");
+        title_holder.classList.add("col-6", "placeholder");
+        card_title.appendChild(title_holder)
+
+        for (let i=0; i<3; i++) {
+            let description_holder = document.createElement("span");
+            description_holder.classList.add("col-8", "placeholder");
+            card_text.appendChild(description_holder)
+        }
+    }
+
+    return col;
 }
 
 function loadBrowse () {
