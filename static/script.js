@@ -1,10 +1,10 @@
 "use strict";
 
-const TAXONOMY_ORDER = ["Species", "Genus", "Family", "Order"];
-let ORDER;
+const TAXONOMY_ORDER = ["Species", "Genus", "Family", "Order", "Class"];
+let CLASS;
 
 document.addEventListener("DOMContentLoaded", async function () {
-    ORDER = await getTaxon(0);
+    CLASS = await getTaxon(0);
     document.getElementById("nav-index-btn").addEventListener("click", loadIndex);
     document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse);
     document.getElementById("nav-add-btn").addEventListener("click", loadAdd)
@@ -108,10 +108,10 @@ function loadBrowse () {
 
     let h3 = document.createElement("h3");
     h3.className = "mb-3";
-    h3.appendChild(document.createTextNode(ORDER.name));
+    h3.appendChild(document.createTextNode(CLASS.name));
     bod.appendChild(h3);
 
-    createBrowseLevel(3, "browse-accordion", bod);
+    createBrowseLevel(TAXONOMY_ORDER.length-1, "browse-accordion", bod);
 }
 
 function createBrowseLevel (level, parent_id, parent) {
@@ -131,7 +131,7 @@ function createBrowseLevel (level, parent_id, parent) {
         let item_bod = document.getElementById(`${item_id}-body`);
         item_bod.appendChild(document.createTextNode("lorem ipsum lorem ipsum lorem lorem lorem"));
         if (level > 0) {
-            createBrowseLevel(level - 1, item_id, item_bod);
+            createBrowseLevel(level-1, item_id, item_bod);
         }
         /*
         // Set-up for loading when it is clicked
@@ -151,7 +151,7 @@ function createBrowseLevel (level, parent_id, parent) {
     return level_list
 }
 
-function loadAdd () {
+function loadAdd() {
     let bod = document.getElementById("main-container");
     clearElement(bod);
 
@@ -173,7 +173,7 @@ function loadAdd () {
 
     let order_item = document.createElement("li");
     order_item.className = "breadcrumb-item";
-    order_item.appendChild(document.createTextNode(ORDER.name))
+    order_item.appendChild(document.createTextNode(CLASS.name))
     bread_ol.appendChild(order_item);
 
     // Setup dropdown
@@ -181,7 +181,7 @@ function loadAdd () {
     bread_dropdown.className = "dropdown";
     bread_dropdown.id = "breadcrumb-dropdown"
 
-    createBreadcrumbDropdownInner(ORDER, 2, bread_dropdown);
+    createBreadcrumbDropdownInner(CLASS, TAXONOMY_ORDER.length-2, bread_dropdown);
 
     let drop_item = document.createElement("li");
     drop_item.id = "breadcrumb-dropdown-li"
@@ -195,10 +195,17 @@ function loadAdd () {
     form_div.id = "add-form-div";
     bod.appendChild(form_div);
 
+    loadAddPlaceholder();
+}
+
+function loadAddPlaceholder() {
+    let container = document.getElementById("add-form-div");
+    clearElement(container);
+
     let holder_div = document.createElement("div");
     holder_div.classList.add("col-3", "mb-3", "mx-auto");
     holder_div.appendChild(document.createTextNode("Select taxonomy level to add child to"));
-    form_div.appendChild(holder_div);
+    container.appendChild(holder_div);
 }
 
 function loadGeneralCreator() {
@@ -346,7 +353,10 @@ function loadTaxonCreator(parent, level) {
                 body: JSON.stringify(data)
             })
             let content = await response.json();
-            loadTaxon(content.id);
+
+            loadAddPlaceholder();
+
+            await update_breadcrumb(content, level-1);
         } catch (e) {
             alert(e);
         }

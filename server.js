@@ -16,7 +16,7 @@ try {
     taxa_data = [{
         id: 0,
         name: "Aves",
-        description: "The order containing all birds",
+        description: "The class containing all birds",
         parent: null
     }]
     fs.writeFileSync(TAXA_FILENAME, JSON.stringify(taxa_data))
