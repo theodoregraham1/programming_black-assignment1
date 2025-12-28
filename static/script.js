@@ -1,7 +1,5 @@
 "use strict";
 
-// TODO: Error handling for all fetches
-
 const TAXONOMY_ORDER = ["Species", "Genus", "Family", "Order"];
 let ORDER;
 
@@ -234,6 +232,7 @@ function loadBirdCreator(genus) {
     let inputs_div = document.getElementById("add-form-inputs");
     inputs_div.classList.add("ms-auto");
 
+    // Picture input element
     let picture_div = document.createElement("div");
     picture_div.classList.add("mb-3", "mx-auto");
     inputs_div.appendChild(picture_div);
@@ -281,25 +280,29 @@ function loadBirdCreator(genus) {
     form.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        let data = new FormData(form);
-        data = Object.fromEntries(data.entries());
-        data.genus = genus.id;
-        let response = await fetch("/add/species/", {
-            method: "POST",
-            headers: {
-                'Accept': 'application/json, text/plain, */*',
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        });
-        let content = await response.json();
-        loadBird(content.id);
+        try {
+            let data = new FormData(form);
+            data = Object.fromEntries(data.entries());
+            data.genus = genus.id;
+            let response = await fetch("/add/species/", {
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            });
+            let content = await response.json();
+            loadBird(content.id);
+        } catch (e) {
+            alert(e);
+        }
     })
 
 }
 
 function loadTaxonCreator(parent, level) {
-    console.log(parent)
+    // Load creator for a new taxon
     let form = loadGeneralCreator();
     let inputs_div = document.getElementById("add-form-inputs");
     inputs_div.classList.add("mx-auto");
@@ -311,22 +314,28 @@ function loadTaxonCreator(parent, level) {
     submit_button.appendChild(document.createTextNode(`Add new ${TAXONOMY_ORDER[level]}`))
     inputs_div.appendChild(submit_button);
 
+    // Submitter for form
     form.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        let data = new FormData(form);
-        data = Object.fromEntries(data.entries());
-        data.parent = parent.id;
-        let response = await fetch("add/level/", {
-            method: "POST",
-            headers: {
-                'Accept': 'application/json, text/plain, */*',
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data)
-        })
-        let content = await response.json();
-        loadTaxon(content.id);
+        try {
+            let data = new FormData(form);
+            data = Object.fromEntries(data.entries());
+            data.parent = parent.id;
+
+            let response = await fetch("add/level/", {
+                method: "POST",
+                headers: {
+                    'Accept': 'application/json',
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            let content = await response.json();
+            loadTaxon(content.id);
+        } catch (e) {
+            alert(e);
+        }
     })
 }
 
@@ -403,9 +412,6 @@ function createAccordionItem (item_id, title_text, parent_id) {
 }
 
 async function createBreadcrumbDropdownInner (parent, level, container) {
-    let response = await fetch(`get/levels/${parent.id}`);
-    let choices = await response.json();
-
     let btn = document.createElement("span");
     btn.classList.add("dropdown-toggle", "badge", "bg-primary");
     btn.ariaExpanded = "false";
@@ -418,14 +424,23 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
     options.className = "dropdown-menu";
     container.appendChild(options);
 
-    for (let i=0; i < choices.length; i++) {
-        let li = document.createElement("li");
-        li.id = `breadcrumb-dropdown-option-${level}-${i}`
-        li.className = "dropdown-item";
-        li.appendChild(document.createTextNode(choices[i].name));
-        options.appendChild(li)
+    try {
+        let response = await fetch(`get/levels/${parent.id}`);
+        let choices = await response.json();
 
-        li.addEventListener("click", () => update_breadcrumb(choices[i], level-1));
+        for (let i = 0; i < choices.length; i++) {
+            let li = document.createElement("li");
+            li.id = `breadcrumb-dropdown-option-${level}-${i}`
+            li.className = "dropdown-item";
+            li.appendChild(document.createTextNode(choices[i].name));
+            options.appendChild(li)
+
+            li.addEventListener("click", () => update_breadcrumb(choices[i], level - 1));
+        }
+    } catch (e) {
+        alert(e);
+
+        clearElement(options);
     }
 
     let new_li = document.createElement("li");
@@ -438,10 +453,13 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
 }
 
 async function getTaxon(id) {
-    // TODO: Error handling
-    let response = await fetch(`get/entity/taxon/${id}`)
+    try {
+        let response = await fetch(`get/entity/taxon/${id}`)
 
-    return await response.json()
+        return await response.json()
+    } catch (e) {
+        throw e;
+    }
 }
 
 function clearElement (element) {
