@@ -323,12 +323,6 @@ function loadTaxon (taxonId) {
 
 }
 
-function clearElement (element) {
-    while (element.firstChild) {
-        element.removeChild(element.firstChild)
-    }
-}
-
 function createAccordionItem (item_id, title_text, parent_id) {
     // Create element
     let new_li = document.createElement("div");
@@ -368,9 +362,8 @@ function createAccordionItem (item_id, title_text, parent_id) {
 }
 
 async function createBreadcrumbDropdownInner (parent, level, container) {
-    // TODO: Fetch parent children
-    let response = await fetch();
-    let choices = [0,1,2,3,4,5,6];
+    let response = await fetch(`get/levels/${parent}`);
+    let choices = await response.json();
 
     let btn = document.createElement("span");
     btn.classList.add("dropdown-toggle", "badge", "bg-primary");
@@ -401,4 +394,10 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
     options.appendChild(new_li)
 
     new_li.addEventListener("click", () => loadTaxomCreator(parent))
+}
+
+function clearElement (element) {
+    while (element.firstChild) {
+        element.removeChild(element.firstChild)
+    }
 }

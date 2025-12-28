@@ -121,11 +121,18 @@ app.post("/search/", (req, res) => {
 
 app.get("/get/levels/:parent", (req, res) => {
     const {parent} = req.params;
+    const parent_id = findByField(taxoms_data, "name", parent)[0];
+
+    res.contentType("application/json");
+
+    if (!parent_id) {
+        res.statusCode = 406;
+        res.send(JSON.stringify({}));
+    }
 
     let children = findByField(taxoms_data, "parent", parent);
 
     res.statusCode = 200;
-    res.contentType("application/json");
     res.send(JSON.stringify(children));
 })
 
