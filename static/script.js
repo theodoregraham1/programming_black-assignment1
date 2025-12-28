@@ -186,15 +186,13 @@ function loadAdd () {
     form_div.appendChild(holder_div);
 }
 
-function loadBirdCreator() {
-    // Create bird creator
-    // TODO: Think about UX
+function loadBirdCreator(genus) {
+    // Create bird creator form
     let container = document.getElementById("add-form-div");
     clearElement(container);
 
     let form = document.createElement("form");
     form.classList.add("row", "mx-5");
-    form.action = "submit_bird_creator()";
     container.appendChild(form);
 
     let inputs_div = document.createElement("div");
@@ -210,6 +208,7 @@ function loadBirdCreator() {
     title_input.type = "text";
     title_input.placeholder = "Name";
     title_input.name = "name";
+    title_input.required = true;
     title_div.appendChild(title_input);
 
     let description_div = document.createElement("div");
@@ -219,7 +218,8 @@ function loadBirdCreator() {
     let description_input = document.createElement("textarea")
     description_input.classList.add("form-control")
     description_input.placeholder = "Bird description"
-    title_input.name = "description";
+    description_input.name = "description";
+    description_input.required = true;
     description_div.appendChild(description_input);
 
     let picture_div = document.createElement("div");
@@ -262,12 +262,27 @@ function loadBirdCreator() {
     });
 
     window.addEventListener("resize", () => {
-        console.log(preview_div.clientWidth);
         picture_preview.width = Math.ceil(preview_div.clientWidth * 0.7);
     });
-}
 
-function submit_bird_creator() {
+    // Submitter for form
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        let data = await new FormData(form);
+        data = Object.fromEntries(data.entries());
+        data.genus = genus;
+        let response = await fetch("/add/species/", {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json, text/plain, */*',
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+        let content = await response.json();
+        loadBird(content.id);
+    })
 
 }
 
@@ -287,7 +302,7 @@ function update_breadcrumb (choice, level) {
         createBreadcrumbDropdownInner(choice, level, dropdown_container);
     } else {
         dropdown_container.hidden = true;
-        loadBirdCreator()
+        loadBirdCreator(choice)
     }
 }
 
@@ -296,7 +311,8 @@ function loadSearch (query) {
 }
 
 function loadBird (birdId) {
-
+    let bod = document.getElementById("main-container");
+    clearElement(bod);
 }
 
 function loadTaxon (taxonId) {

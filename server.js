@@ -33,6 +33,7 @@ try {
 const app = express();
 
 app.use(express.static("static"));
+app.use(express.json());
 
 app.get("/", (req, res) => {
     res.redirect("index.html");
@@ -54,30 +55,40 @@ app.post("/add/species/", (req, res) => {
     // Data per bird: genus, picture, name, id, description
 
     // Validate data
-    let [name, genus, picture, description]  = req.body;
+    const {name, genus, picture, description} = req.body;
 
     if (!name || !genus || !description) {
         res.statusCode = 406;
         res.send("Error: missing data from request")
     }
-
-    birds_data.add({
+    let bird = {
         "id": birds_data.size, // If you allow deletion, this will produce duplicates
         "name": name,
         "genus": genus,
         "picture": picture,
         "description": description
-    });
+    };
+    birds_data.push(bird);
 
-    fs.writeFile(BIRDS_FILENAME, JSON.stringify(birds_data)); // There's a better way to write this
+    // Non-blocking write to file
+    fs.writeFile(BIRDS_FILENAME, JSON.stringify(birds_data), (err) => {
+        if (err) {
+            res.statusCode = 500;
+            res.contentType("text/plain")
+            res.send("Error in writing new entry to file");
+        }
+    }); // There's a better way to write this
+
+    console.log("/add/species/: New bird successfully written to file")
 
     res.statusCode = 200;
-    res.send();
+    res.contentType("application/json")
+    res.send(JSON.stringify({"id": bird.id}));
 });
 
 app.post("/add/level/", (req, res) => {
     // Data per level: parent, name, description, id
-
+    console.log(req.body);
     let [parent, name, description] = req.body;
 
     if (!name || !parent || !description) {
