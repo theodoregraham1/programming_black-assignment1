@@ -8,18 +8,18 @@ const port = 8080;
 
 // Files
 // Images could be served locally, however I believe this falls out of scope for the project
-const TAXONS_FILENAME = "./taxons.json";
+const TAXA_FILENAME = "./taxa.json";
 try {
-    var taxons_data = JSON.parse(fs.readFileSync(TAXONS_FILENAME, "utf-8"));
+    var taxa_data = JSON.parse(fs.readFileSync(TAXA_FILENAME, "utf-8"));
 } catch (e) {
     // If it does not exist, create it with just Aves in it
-    taxons_data = [{
+    taxa_data = [{
         id: 0,
         name: "Aves",
         description: "The order containing all birds",
         parent: null
     }]
-    fs.writeFileSync(TAXONS_FILENAME, JSON.stringify(taxons_data))
+    fs.writeFileSync(TAXA_FILENAME, JSON.stringify(taxa_data))
 }
 
 const BIRDS_FILENAME = "./birds.json";
@@ -96,14 +96,14 @@ app.post("/add/level/", (req, res) => {
         res.send("Error: missing data from request")
     }
 
-    taxons_data.add({
-        "id": taxons_data.size,
+    taxa_data.add({
+        "id": taxa_data.size,
         "name": name,
         "parent": parent,
         "description": description
     });
 
-    fs.writeFile(TAXONS_FILENAME, JSON.stringify(taxons_data), (err) => {
+    fs.writeFile(TAXA_FILENAME, JSON.stringify(taxa_data), (err) => {
         if (err) {
             res.statusCode = 500;
             res.contentType("text/plain")
@@ -133,7 +133,7 @@ app.get("/get/entity/:type/:id", (req, res) => {
         let data;
         switch (type) {
             case "taxon":
-                data = findByID(taxons_data, id);
+                data = findByID(taxa_data, id);
                 break;
             case "bird":
                 data = findByID(birds_data, id);
@@ -161,7 +161,7 @@ app.get("/get/levels/:parent", (req, res) => {
         res.send(JSON.stringify({}));
     }
 
-    let children = findByField(taxons_data, "parent", parent);
+    let children = findByField(taxa_data, "parent", parent);
 
     res.statusCode = 200;
     res.send(JSON.stringify(children));
@@ -172,12 +172,7 @@ app.listen(port, hostname, () => {
 });
 
 function findByID(data, id) {
-    for (let i=0; i<data.size; i++) {
-        if (data[i].id === id) {
-            return data[i];
-        }
-    }
-    return null
+    return findByField(data, "id", id)[0];
 }
 
 function findByField(data, field, value) {
