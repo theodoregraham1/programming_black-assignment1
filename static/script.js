@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
 })
 
 const TAXONOMY_ORDER = ["Species", "Genus", "Family", "Order"];
-const ORDER_NAME = "Aves";
+const ORDER = fetch("get/entity/taxon/");
 
 async function loadIndex() {
     let bod = document.getElementById("main-container")
@@ -286,7 +286,7 @@ function loadBirdCreator(genus) {
 
 }
 
-function loadTaxomCreator(parent) {
+function loadTaxonCreator(parent) {
 
 }
 
@@ -311,16 +311,17 @@ function update_breadcrumb (choice, level) {
 }
 
 function loadSearch (query) {
-
+    // TODO
 }
 
 function loadBird (birdId) {
     let bod = document.getElementById("main-container");
     clearElement(bod);
+    // TODO
 }
 
 function loadTaxon (taxonId) {
-
+    // TODO
 }
 
 function createAccordionItem (item_id, title_text, parent_id) {
@@ -381,10 +382,10 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
         let li = document.createElement("li");
         li.id = `breadcrumb-dropdown-option-${level}-${i}`
         li.className = "dropdown-item";
-        li.appendChild(document.createTextNode(choices[i]));
+        li.appendChild(document.createTextNode(choices[i].name));
         options.appendChild(li)
 
-        li.addEventListener("click", () => update_breadcrumb(choices[i], level-1));
+        li.addEventListener("click", () => update_breadcrumb(choices[i].id, level-1));
     }
 
     let new_li = document.createElement("li");
@@ -393,7 +394,7 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
     new_li.appendChild(document.createTextNode(`Create new ${TAXONOMY_ORDER[level]}`));
     options.appendChild(new_li)
 
-    new_li.addEventListener("click", () => loadTaxomCreator(parent))
+    new_li.addEventListener("click", () => loadTaxonCreator(parent))
 }
 
 function clearElement (element) {

@@ -8,18 +8,18 @@ const port = 8080;
 
 // Files
 // Images could be served locally, however I believe this falls out of scope for the project
-const TAXOMS_FILENAME = "./taxoms.json";
+const TAXONS_FILENAME = "./taxons.json";
 try {
-    var taxoms_data = JSON.parse(fs.readFileSync(TAXOMS_FILENAME, "utf-8"));
+    var taxons_data = JSON.parse(fs.readFileSync(TAXONS_FILENAME, "utf-8"));
 } catch (e) {
     // If it does not exist, create it with just Aves in it
-    taxoms_data = [{
+    taxons_data = [{
         id: 0,
         name: "Aves",
         description: "The order containing all birds",
         parent: null
     }]
-    fs.writeFileSync(TAXOMS_FILENAME, JSON.stringify(taxoms_data))
+    fs.writeFileSync(TAXONS_FILENAME, JSON.stringify(taxons_data))
 }
 
 const BIRDS_FILENAME = "./birds.json";
@@ -96,14 +96,14 @@ app.post("/add/level/", (req, res) => {
         res.send("Error: missing data from request")
     }
 
-    taxoms_data.add({
-        "id": taxoms_data.size,
+    taxons_data.add({
+        "id": taxons_data.size,
         "name": name,
         "parent": parent,
         "description": description
     });
 
-    fs.writeFile(TAXOMS_FILENAME, JSON.stringify(taxoms_data), (err) => {
+    fs.writeFile(TAXONS_FILENAME, JSON.stringify(taxons_data), (err) => {
         if (err) {
             res.statusCode = 500;
             res.contentType("text/plain")
@@ -119,18 +119,49 @@ app.post("/search/", (req, res) => {
 
 });
 
-app.get("/get/levels/:parent", (req, res) => {
-    const {parent} = req.params;
-    const parent_id = findByField(taxoms_data, "name", parent)[0];
+app.get("/get/entity/:type/:id", (req, res) => {
+    const {type, id} = req.params;
 
     res.contentType("application/json");
 
-    if (!parent_id) {
+    if (!id || !type) {
         res.statusCode = 406;
         res.send(JSON.stringify({}));
     }
 
-    let children = findByField(taxoms_data, "parent", parent);
+    try {
+        let data;
+        switch (type) {
+            case "taxon":
+                data = findByID(taxons_data, id);
+                break;
+            case "bird":
+                data = findByID(birds_data, id);
+                break;
+            default:
+                // Premature break on error
+                throw new Error("Invalid type")
+        }
+
+        res.statusCode = 200;
+        res.send(JSON.stringify(data));
+    } catch (e) {
+        res.statusCode = 406;
+        res.send(JSON.stringify(e));
+    }
+});
+
+app.get("/get/levels/:parent", (req, res) => {
+    const {parent} = req.params;
+
+    res.contentType("application/json");
+
+    if (!parent) {
+        res.statusCode = 406;
+        res.send(JSON.stringify({}));
+    }
+
+    let children = findByField(taxons_data, "parent", parent);
 
     res.statusCode = 200;
     res.send(JSON.stringify(children));
