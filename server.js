@@ -189,11 +189,16 @@ app.get("/get/levels/:parent", (req, res) => {
 
     if (!parent) {
         res.statusCode = 406;
-        res.send(JSON.stringify({}));
+        res.send(JSON.stringify("Parameter required"));
+        return;
     }
-
-    parent = parseInt(parent);
-
+    try {
+        parent = parseInt(parent);
+    } catch (e) {
+        res.statusCode = 406;
+        res.send(JSON.stringify("Parent must be an integer"));
+        return;
+    }
     let children = findByField(taxa_data, "parent", parent);
 
     res.statusCode = 200;
