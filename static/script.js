@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse);
     document.getElementById("nav-add-btn").addEventListener("click", loadAdd)
 
-    await loadBrowse();
+    await loadAdd();
 })
 
 async function loadIndex() {
@@ -219,17 +219,10 @@ function loadAdd() {
     bread_ol.className = "breadcrumb";
     breadcrumb.append(bread_ol);
 
-    let order_item = document.createElement("li");
-    order_item.className = "breadcrumb-item";
-    order_item.appendChild(document.createTextNode(CLASS.name))
-    bread_ol.appendChild(order_item);
-
     // Setup dropdown
     let bread_dropdown = document.createElement("div");
     bread_dropdown.className = "dropdown";
-    bread_dropdown.id = "breadcrumb-dropdown"
-
-    createBreadcrumbDropdownInner(CLASS, TAXONOMY_ORDER.length-2, bread_dropdown);
+    bread_dropdown.id = "breadcrumb-dropdown";
 
     let drop_item = document.createElement("li");
     drop_item.id = "breadcrumb-dropdown-li"
@@ -237,6 +230,10 @@ function loadAdd() {
     drop_item.style.width = Math.ceil(bread_dropdown.clientWidth * 1.2).toString();
     drop_item.appendChild(bread_dropdown);
     bread_ol.appendChild(drop_item);
+
+    // createBreadcrumbDropdownInner(CLASS, TAXONOMY_ORDER.length-2, bread_dropdown);
+    updateBreadcrumb(CLASS, TAXONOMY_ORDER.length-2, drop_item);
+
 
     // Make div for stuff to go in
     let form_div = document.createElement("div");
@@ -296,6 +293,8 @@ function loadGeneralCreator() {
 }
 
 function loadBirdCreator(genus) {
+    // TODO: Make look good on mobile
+
     // Create bird creator form
     let form = loadGeneralCreator();
     let inputs_div = document.getElementById("add-form-inputs");
@@ -411,19 +410,35 @@ function loadTaxonCreator(parent, level) {
     })
 }
 
-function updateBreadcrumb (choice, level) {
+function updateBreadcrumb (choice, level, dropdown_container) {
     // TODO: Back button
-    let dropdown_container = document.getElementById("breadcrumb-dropdown-li");
+    // let dropdown_container = document.getElementById("breadcrumb-dropdown-li");
 
     let bread_item = document.createElement("li");
     bread_item.className = "breadcrumb-item";
-    bread_item.appendChild(document.createTextNode(choice.name));
+    let a = document.createElement("a");
+    a.appendChild(document.createTextNode(choice.name));
+    a.href = "#";
+    bread_item.appendChild(a);
+
+    a.addEventListener("click", (event) => {
+        event.preventDefault();
+
+        while (bread_item.nextElementSibling !== dropdown_container) {
+            bread_item.nextElementSibling.remove();
+        }
+
+        createBreadcrumbDropdownInner(choice, level, dropdown_container)
+
+        // In case creator has been selected already
+        loadAddPlaceholder();
+        dropdown_container.hidden = false;
+    })
 
     dropdown_container.insertAdjacentElement("beforebegin", bread_item);
 
     if (level >= 1) {
         // Reset dropdown
-        clearElement(dropdown_container);
         createBreadcrumbDropdownInner(choice, level, dropdown_container);
     } else {
         dropdown_container.hidden = true;
@@ -457,6 +472,8 @@ function loadTaxon(taxon) {
 }
 
 async function createBreadcrumbDropdownInner (parent, level, container) {
+    clearElement(container);
+
     let btn = document.createElement("span");
     btn.classList.add("dropdown-toggle", "badge", "bg-primary");
     btn.ariaExpanded = "false";
@@ -480,7 +497,7 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
             li.appendChild(document.createTextNode(choices[i].name));
             options.appendChild(li)
 
-            li.addEventListener("click", () => updateBreadcrumb(choices[i], level - 1));
+            li.addEventListener("click", () => updateBreadcrumb(choices[i], level-1, container));
         }
     } catch (e) {
         alert(e);
@@ -494,7 +511,10 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
     new_li.appendChild(document.createTextNode(`Create new ${TAXONOMY_ORDER[level]}`));
     options.appendChild(new_li)
 
-    new_li.addEventListener("click", () => loadTaxonCreator(parent, level))
+    new_li.addEventListener("click", () => {
+        loadTaxonCreator(parent, level);
+        container.hidden = true;
+    })
 }
 
 async function getTaxon(id) {
