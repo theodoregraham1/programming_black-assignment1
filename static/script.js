@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse);
     document.getElementById("nav-add-btn").addEventListener("click", loadAdd)
 
-    await loadIndex();
+    await loadBrowse();
 })
 
 async function loadIndex() {
@@ -48,7 +48,6 @@ function makeCard(data) {
     let img = document.createElement("img");
     img.alt = "..."; // do
     img.className = "card-img-top";
-    console.log(card.clientWidth);
     img.style.width = "300px";
     card.style.maxWidth = "300px";
     card.appendChild(img);
@@ -78,7 +77,7 @@ function makeCard(data) {
 
         card_text.appendChild(document.createTextNode(description));
         card_btn.id = `card-${id}-btn`;
-        card_btn.addEventListener("click", () => loadBird(id))
+        card_btn.addEventListener("click", () => loadBird(data))
 
     } catch (e) {
         // Replace it with placeholder
@@ -122,40 +121,38 @@ function loadBrowse () {
 
 function createBrowseLevel (level, parent, parent_level_id) {
     let level_list = document.createElement("div");
-    level_list.classList.add("accordion","accordion-flush");
+    level_list.classList.add("accordion","accordion-flush", "mt-3");
     level_list.id = `${parent_level_id}-list`;
 
-    // level_list.hidden = true
-
-    // TODO: fetch level data from back-end
+    let new_level = level-1
     fetch(`get/levels/${parent.id}`)
         .then(response => response.json())
-        .then(content => content.forEach(bird => {
-            let item_id = `${parent_level_id}-${bird.id}`;
-            let item = createAccordionItem(item_id, bird, level_list.id)
+        .then(content => content.forEach(child => {
+            // Load children
+            let item_id = `${parent_level_id}-${child.id}`;
+            let item = createAccordionItem(item_id, child, level_list.id)
 
             level_list.appendChild(item);
 
-            document.getElementById(`${item_id}-body`).appendChild(
-                createBrowseLevel(level-1, bird, item_id)
-            )
+            let btn = document.createElement("button");
+            btn.appendChild(document.createTextNode(`View ${TAXONOMY_ORDER[new_level]}`))
+            btn.classList.add("btn", "btn-sm", "btn-success")
+            document.getElementById(`${item_id}-body`).appendChild(btn);
 
-        }))
+            if (new_level > 0) {
+                // If the level of the next item is a taxon, load its children when it is opened
+                let opener = document.getElementById(`${item_id}-opener`);
+                opener.addEventListener("click", () => {
+                    document.getElementById(`${item_id}-body`).appendChild(
+                        createBrowseLevel(new_level, child, item_id)
+                    )
+                }, {once: true}); // Children only ever need to be loaded once
 
-        /*
-        // Set-up for loading when it is clicked
-        document.getElementById(`${item_id}-opener`).addEventListener("click", () => {
-
-            if (!document.getElementById(`${item_id}-list`)) {
-                // Use forEach later
-                if (level > 0) {
-                } else {
-                    // something else, to link to individual species
-                }
+                btn.addEventListener("click", () => loadTaxon(child));
+            } else {
+                btn.addEventListener("click", () => loadBird(child));
             }
-        })
-         */
-
+        }));
 
     return level_list
 }
@@ -191,7 +188,10 @@ function createAccordionItem (item_id, item, parent_id) {
     let acc_body = document.createElement("div");
     acc_body.className = "accordion-body";
     acc_body.id = `${item_id}-body`
-    acc_body.appendChild(document.createTextNode(item.description));
+
+    let p = document.createElement("p");
+    p.appendChild(document.createTextNode(item.description));
+    acc_body.appendChild(p);
 
     acc_collapse.appendChild(acc_body);
     new_li.appendChild(acc_collapse);
@@ -362,7 +362,7 @@ function loadBirdCreator(genus) {
                 body: JSON.stringify(data)
             });
             let content = await response.json();
-            loadBird(content.id);
+            loadBird(content);
         } catch (e) {
             alert(e);
         }
@@ -404,14 +404,14 @@ function loadTaxonCreator(parent, level) {
 
             loadAddPlaceholder();
 
-            await update_breadcrumb(content, level-1);
+            await updateBreadcrumb(content, level-1);
         } catch (e) {
             alert(e);
         }
     })
 }
 
-function update_breadcrumb (choice, level) {
+function updateBreadcrumb (choice, level) {
     // TODO: Back button
     let dropdown_container = document.getElementById("breadcrumb-dropdown-li");
 
@@ -435,16 +435,26 @@ function loadSearch (query) {
     // TODO
 }
 
-function loadBird (bird_id) {
+function loadBirdFromId(bird_id) {
+
+}
+
+function loadGeneralItem(item) {
     let bod = document.getElementById("main-container");
     clearElement(bod);
+}
+
+function loadBird(bird) {
+    loadGeneralItem(bird);
+}
+
+function loadTaxonFromId(taxon_id) {
     // TODO
 }
 
-function loadTaxon (taxonId) {
-    // TODO
+function loadTaxon(taxon) {
+    loadGeneralItem(taxon);
 }
-
 
 async function createBreadcrumbDropdownInner (parent, level, container) {
     let btn = document.createElement("span");
@@ -470,7 +480,7 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
             li.appendChild(document.createTextNode(choices[i].name));
             options.appendChild(li)
 
-            li.addEventListener("click", () => update_breadcrumb(choices[i], level - 1));
+            li.addEventListener("click", () => updateBreadcrumb(choices[i], level - 1));
         }
     } catch (e) {
         alert(e);

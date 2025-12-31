@@ -183,7 +183,7 @@ app.get("/get/entity/:type/:id", (req, res) => {
 });
 
 app.get("/get/levels/:parent", (req, res) => {
-    let  {parent} = req.params;
+    let {parent} = req.params;
 
     res.contentType("application/json");
 
@@ -201,6 +201,12 @@ app.get("/get/levels/:parent", (req, res) => {
     }
     let children = findByField(taxa_data, "parent", parent);
 
+    if (children.length === 0) {
+        children = findByField(birds_data, "genus", parent);
+        console.log(children);
+    }
+
+    console.log(`/get/levels/: Children of ${parent} queried`)
     res.statusCode = 200;
     res.send(JSON.stringify(children));
 })
