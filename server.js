@@ -6,10 +6,14 @@ const fs = require("node:fs");
 const hostname = "127.0.0.1";
 const port = 8080;
 
-// Files
-// Images could be served locally, however I believe this falls out of scope for the project
+// TODO: make field for species (latin name)
+/*
+    Images could be served locally, however I believe this falls out of scope for the project. It also leads to a
+    greater issue with source and copyright
+ */
+
 const TAXA_FILENAME = "./taxa.json";
-let taxa_data
+let taxa_data;
 try {
     taxa_data = JSON.parse(fs.readFileSync(TAXA_FILENAME, "utf-8"));
 } catch (e) {
@@ -195,6 +199,7 @@ app.get("/get/levels/:parent", (req, res) => {
     try {
         parent = parseInt(parent);
     } catch (e) {
+        console.log("Error in /get/levels/:", e);
         res.statusCode = 406;
         res.send(JSON.stringify("Parent must be an integer"));
         return;
@@ -203,7 +208,6 @@ app.get("/get/levels/:parent", (req, res) => {
 
     if (children.length === 0) {
         children = findByField(birds_data, "genus", parent);
-        console.log(children);
     }
 
     console.log(`/get/levels/: Children of ${parent} queried`)

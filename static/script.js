@@ -186,7 +186,7 @@ function createAccordionItem (item_id, item, parent_id) {
     acc_collapse.setAttribute("data-bs-parent", `#${parent_id}`);
 
     let acc_body = document.createElement("div");
-    acc_body.className = "accordion-body";
+    acc_body.classList.add("accordion-body", "border");
     acc_body.id = `${item_id}-body`
 
     let p = document.createElement("p");
@@ -231,9 +231,8 @@ function loadAdd() {
     drop_item.appendChild(bread_dropdown);
     bread_ol.appendChild(drop_item);
 
-    // createBreadcrumbDropdownInner(CLASS, TAXONOMY_ORDER.length-2, bread_dropdown);
+    // Begin the dropdown with the class
     updateBreadcrumb(CLASS, TAXONOMY_ORDER.length-2, drop_item);
-
 
     // Make div for stuff to go in
     let form_div = document.createElement("div");
@@ -284,7 +283,7 @@ function loadGeneralCreator() {
 
     let description_input = document.createElement("textarea")
     description_input.classList.add("form-control")
-    description_input.placeholder = "Bird description"
+    description_input.id = "add-form-description"
     description_input.name = "description";
     description_input.required = true;
     description_div.appendChild(description_input);
@@ -300,6 +299,9 @@ function loadBirdCreator(genus) {
     let inputs_div = document.getElementById("add-form-inputs");
     inputs_div.classList.add("ms-auto");
 
+    document.getElementById("add-form-description")
+        .placeholder = "Description of bird";
+
     // Picture input element
     let picture_div = document.createElement("div");
     picture_div.classList.add("mb-3", "mx-auto");
@@ -313,13 +315,14 @@ function loadBirdCreator(genus) {
     picture_div.appendChild(picture_input)
 
     let submit_button = document.createElement("button");
-    submit_button.classList.add("btn", "btn-success");
+    submit_button.classList.add("btn", "btn-success", "mb-5");
     submit_button.appendChild(document.createTextNode("Add new bird"))
     inputs_div.appendChild(submit_button);
 
     // Give picture preview
     let preview_div = document.createElement("div");
     preview_div.classList.add("col-md-6", "me-auto", "border")
+    picture_div.style.minHeight = "50px";
     form.appendChild(preview_div);
 
     let preview_label = document.createElement("h5");
@@ -375,11 +378,14 @@ function loadTaxonCreator(parent, level) {
     let inputs_div = document.getElementById("add-form-inputs");
     inputs_div.classList.add("mx-auto");
 
+    document.getElementById("add-form-description")
+        .placeholder = `Description of ${TAXONOMY_ORDER[level].toLowerCase()}`;
+
     // TODO: Show other children of the parent to the side
 
     let submit_button = document.createElement("button");
     submit_button.classList.add("btn", "btn-success");
-    submit_button.appendChild(document.createTextNode(`Add new ${TAXONOMY_ORDER[level]}`))
+    submit_button.appendChild(document.createTextNode(`Add new ${TAXONOMY_ORDER[level].toLowerCase()}`))
     inputs_div.appendChild(submit_button);
 
     // Submitter for form
@@ -411,8 +417,6 @@ function loadTaxonCreator(parent, level) {
 }
 
 function updateBreadcrumb (choice, level, dropdown_container) {
-    // TODO: Back button
-    // let dropdown_container = document.getElementById("breadcrumb-dropdown-li");
 
     let bread_item = document.createElement("li");
     bread_item.className = "breadcrumb-item";
@@ -422,6 +426,7 @@ function updateBreadcrumb (choice, level, dropdown_container) {
     bread_item.appendChild(a);
 
     a.addEventListener("click", (event) => {
+        // When the name is clicked in the breadcrumb, go back to that stage in taxonomy selection
         event.preventDefault();
 
         while (bread_item.nextElementSibling !== dropdown_container) {
@@ -450,25 +455,17 @@ function loadSearch (query) {
     // TODO
 }
 
-function loadBirdFromId(bird_id) {
-
-}
-
 function loadGeneralItem(item) {
     let bod = document.getElementById("main-container");
-    clearElement(bod);
+    clearElement(bod); //todo
 }
 
 function loadBird(bird) {
-    loadGeneralItem(bird);
-}
-
-function loadTaxonFromId(taxon_id) {
-    // TODO
+    loadGeneralItem(bird); // todo
 }
 
 function loadTaxon(taxon) {
-    loadGeneralItem(taxon);
+    loadGeneralItem(taxon); // todo
 }
 
 async function createBreadcrumbDropdownInner (parent, level, container) {
