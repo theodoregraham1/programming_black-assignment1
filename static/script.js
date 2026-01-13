@@ -265,17 +265,17 @@ function loadGeneralCreator() {
     inputs_div.id = "add-form-inputs";
     form.appendChild(inputs_div);
 
-    let title_div = document.createElement("div");
-    title_div.classList.add("mb-3", "mx-auto")
-    inputs_div.append(title_div)
+    let name_div = document.createElement("div");
+    name_div.classList.add("mb-3", "mx-auto")
+    inputs_div.append(name_div)
 
-    let title_input = document.createElement("input");
-    title_input.classList.add("form-control");
-    title_input.type = "text";
-    title_input.placeholder = "Name";
-    title_input.name = "name";
-    title_input.required = true;
-    title_div.appendChild(title_input);
+    let name_input = document.createElement("input");
+    name_input.classList.add("form-control");
+    name_input.id = "add-form-name";
+    name_input.name = "name";
+    name_input.type = "text";
+    name_input.required = true;
+    name_div.appendChild(name_input);
 
     let description_div = document.createElement("div");
     description_div.classList.add("mb-3", "mx-auto");
@@ -285,6 +285,7 @@ function loadGeneralCreator() {
     description_input.classList.add("form-control")
     description_input.id = "add-form-description"
     description_input.name = "description";
+    description_input.rows = 10;
     description_input.required = true;
     description_div.appendChild(description_input);
 
@@ -301,6 +302,9 @@ function loadBirdCreator(genus) {
 
     document.getElementById("add-form-description")
         .placeholder = "Description of bird";
+
+    let name_input = document.getElementById("add-form-name");
+    name_input.placeholder = "Common name";
 
     // Picture input element
     let picture_div = document.createElement("div");
@@ -380,6 +384,9 @@ function loadTaxonCreator(parent, level) {
 
     document.getElementById("add-form-description")
         .placeholder = `Description of ${TAXONOMY_ORDER[level].toLowerCase()}`;
+
+    document.getElementById("add-form-name")
+        .placeholder = "Scientific name";
 
     // TODO: Show other children of the parent to the side
 

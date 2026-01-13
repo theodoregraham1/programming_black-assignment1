@@ -82,7 +82,7 @@ app.post("/add/species/", (req, res) => {
     // Data per bird: genus, picture, name, id, description
 
     // Validate data
-    const {name, genus, picture, description} = req.body;
+    const {name, species, genus, picture, description} = req.body;
 
     if (!name || !genus || !description) {
         res.statusCode = 406;
