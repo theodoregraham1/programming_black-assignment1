@@ -104,7 +104,9 @@ app.post("/add/species/", (req, res) => {
         fs.writeFile(
             BIRDS_FILENAME,
             JSON.stringify(birds_data, null, 4),
-            (e) => {throw e}
+            (e) => {
+                throw e;
+            }
         );
 
         console.log("/add/species/: New bird successfully written to file")
@@ -143,7 +145,9 @@ app.post("/add/level/", (req, res) => {
 
         fs.writeFile(TAXA_FILENAME,
             JSON.stringify(taxa_data, null, 4),
-            (e) => throw e
+            (e) => {
+                throw e;
+            }
         );
 
         console.log("/add/level/: New taxon successfully written to file")

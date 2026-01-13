@@ -17,10 +17,7 @@ async function loadIndex() {
     let bod = document.getElementById("main-container")
     clearElement(bod)
 
-    let h2 = document.createElement("h2");
-    h2.classList.add("mb-3", "text-center");
-    h2.appendChild(document.createTextNode("Home"));
-    bod.appendChild(h2);
+    bod.append(createHeader("Birdipedia"))
 
     const NUMBER_OF_CARDS = 3;
     let row = document.createElement("div");
@@ -100,17 +97,11 @@ function makeCard(data) {
 }
 
 function loadBrowse () {
-    /*
-    TODO: Use css to better display levels (colours) (later)
-     */
     let bod = document.getElementById("main-container");
     clearElement(bod);
 
     // Headers
-    let h2 = document.createElement("h2");
-    h2.classList.add("mb-3", "text-center");
-    h2.appendChild(document.createTextNode("Browse"));
-    bod.appendChild(h2);
+    bod.appendChild(createHeader("Browse entries"));
 
     let h3 = document.createElement("h3");
     h3.className = "mb-3";
@@ -136,8 +127,8 @@ function createBrowseLevel (level, parent, parent_level_id) {
             level_list.appendChild(item);
 
             let btn = document.createElement("button");
-            btn.appendChild(document.createTextNode(`View ${TAXONOMY_ORDER[new_level]}`))
-            btn.classList.add("btn", "btn-sm", "btn-success")
+            btn.appendChild(document.createTextNode(`View ${TAXONOMY_ORDER[new_level].toLowerCase()}`))
+            btn.classList.add("btn", "btn-sm", "btn-secondary")
             document.getElementById(`${item_id}-body`).appendChild(btn);
 
             if (new_level > 0) {
@@ -204,14 +195,11 @@ function loadAdd() {
     let bod = document.getElementById("main-container");
     clearElement(bod);
 
-    let h2 = document.createElement("h2");
-    h2.classList.add("my-3", "text-center");
-    h2.appendChild(document.createTextNode("Add"));
-    bod.appendChild(h2);
+    bod.appendChild(createHeader("Add new entry"));
 
     // Setup breadcrumb
     let breadcrumb = document.createElement("nav");
-    breadcrumb.classList.add("mx-auto", "col-md-6")
+    breadcrumb.classList.add("mx-auto", "col-md-6");
     breadcrumb.ariaLabel = "breadcrumb";
     bod.appendChild(breadcrumb);
 
@@ -316,7 +304,7 @@ function loadBirdCreator(genus) {
     species_input.type = "text";
     species_input.required = true;
     species_input.placeholder = "Specific epithet";
-    name_input.insertAdjacentElement("afterend", species_input)
+    name_input.insertAdjacentElement("afterend", species_input);
     name_input.parentElement.classList.add("input-group");
 
     // Picture input element
@@ -324,26 +312,26 @@ function loadBirdCreator(genus) {
     picture_div.classList.add("mb-3", "mx-auto");
     inputs_div.appendChild(picture_div);
 
-    let picture_input = document.createElement("input")
-    picture_input.classList.add("form-control")
+    let picture_input = document.createElement("input");
+    picture_input.classList.add("form-control");
     picture_input.type = "url";
     picture_input.placeholder = "Picture URL"
     picture_input.name = "picture";
-    picture_div.appendChild(picture_input)
+    picture_div.appendChild(picture_input);
 
     let submit_button = document.createElement("button");
     submit_button.classList.add("btn", "btn-success", "mb-5");
-    submit_button.appendChild(document.createTextNode("Add new bird"))
+    submit_button.appendChild(document.createTextNode("Add new bird"));
     inputs_div.appendChild(submit_button);
 
     // Give picture preview
     let preview_div = document.createElement("div");
-    preview_div.classList.add("col-md-6", "me-auto", "border")
+    preview_div.classList.add("col-md-6", "me-auto", "border");
     picture_div.style.minHeight = "50px";
     form.appendChild(preview_div);
 
     let preview_label = document.createElement("h5");
-    preview_label.classList.add("mx-auto", "pt-3")
+    preview_label.classList.add("mx-auto", "pt-3");
     preview_label.appendChild(document.createTextNode("Picture preview"));
     preview_div.appendChild(preview_label);
 
@@ -352,7 +340,7 @@ function loadBirdCreator(genus) {
     picture_preview.ariaHidden = "hidden";
     picture_preview.classList.add("p-3", "mx-auto", "object-fit-contain");
     picture_preview.width = Math.ceil(preview_div.clientWidth * 0.7);
-    preview_div.appendChild(picture_preview)
+    preview_div.appendChild(picture_preview);
 
     picture_input.addEventListener("input", () => {
         picture_preview.src = picture_input.value;
@@ -542,6 +530,13 @@ async function getTaxon(id) {
     } catch (e) {
         throw e;
     }
+}
+
+function createHeader(title) {
+    let h2 = document.createElement("h2");
+    h2.classList.add("border-bottom", "col-md-6", "text-center", "my-3", "pb-2", "mx-auto");
+    h2.appendChild(document.createTextNode(title));
+    return h2;
 }
 
 function clearElement (element) {
