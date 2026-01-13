@@ -1,4 +1,5 @@
 "use strict";
+// TODO: Add aria-labels etc to everything to make accessible (also alt text)
 
 const TAXONOMY_ORDER = ["Species", "Genus", "Family", "Order", "Class"];
 let CLASS;
@@ -285,7 +286,7 @@ function loadGeneralCreator() {
     description_input.classList.add("form-control")
     description_input.id = "add-form-description"
     description_input.name = "description";
-    description_input.rows = 10;
+    description_input.rows = 5;
     description_input.required = true;
     description_div.appendChild(description_input);
 
@@ -303,8 +304,26 @@ function loadBirdCreator(genus) {
     document.getElementById("add-form-description")
         .placeholder = "Description of bird";
 
+    // Make common name and species inputs into a group so they appear side-by-side
     let name_input = document.getElementById("add-form-name");
     name_input.placeholder = "Common name";
+
+    // Add species input
+    let species_input = document.createElement("input");
+    species_input.classList.add("form-control");
+    species_input.id = "add-form-species";
+    species_input.name = "species";
+    species_input.type = "text";
+    species_input.required = true;
+    species_input.placeholder = "Specific epithet";
+    name_input.insertAdjacentElement("afterend", species_input)
+    name_input.parentElement.classList.add("input-group");
+
+    let name_label = document.createElement("label");
+    name_label.for = name_input.id;
+    name_label.className = "form-label";
+    name_label.appendChild(document.createTextNode("English and Latin name"))
+    name_input.parentElement.insertAdjacentElement("beforebegin", name_label);
 
     // Picture input element
     let picture_div = document.createElement("div");
