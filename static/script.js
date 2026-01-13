@@ -319,12 +319,6 @@ function loadBirdCreator(genus) {
     name_input.insertAdjacentElement("afterend", species_input)
     name_input.parentElement.classList.add("input-group");
 
-    let name_label = document.createElement("label");
-    name_label.for = name_input.id;
-    name_label.className = "form-label";
-    name_label.appendChild(document.createTextNode("English and Latin name"))
-    name_input.parentElement.insertAdjacentElement("beforebegin", name_label);
-
     // Picture input element
     let picture_div = document.createElement("div");
     picture_div.classList.add("mb-3", "mx-auto");
