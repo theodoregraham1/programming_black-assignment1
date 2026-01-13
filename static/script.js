@@ -131,9 +131,15 @@ function createBrowseLevel (level, parent, parent_level_id) {
             btn.classList.add("btn", "btn-sm", "btn-secondary")
             document.getElementById(`${item_id}-body`).appendChild(btn);
 
+            let opener = document.getElementById(`${item_id}-opener`);
+            let p = document.createElement("span");
+            p.classList.add("fw-semibold");
+            opener.appendChild(p);
+
             if (new_level > 0) {
+                p.appendChild(document.createTextNode(child.name));
+
                 // If the level of the next item is a taxon, load its children when it is opened
-                let opener = document.getElementById(`${item_id}-opener`);
                 opener.addEventListener("click", () => {
                     document.getElementById(`${item_id}-body`).appendChild(
                         createBrowseLevel(new_level, child, item_id)
@@ -142,6 +148,14 @@ function createBrowseLevel (level, parent, parent_level_id) {
 
                 btn.addEventListener("click", () => loadTaxon(child));
             } else {
+                p.appendChild(document.createTextNode(`${child.name} - (`));
+
+                let italics = document.createElement("span");
+                italics.classList.add("fst-italic");
+                italics.appendChild(document.createTextNode(`${parent.name} ${child.species}`));
+                p.appendChild(italics);
+                p.appendChild(document.createTextNode(")"));
+
                 btn.addEventListener("click", () => loadBird(child));
             }
         }));
@@ -158,6 +172,7 @@ function createAccordionItem (item_id, item, parent_id) {
     // Create title section
     let title = document.createElement("p");
     title.className = "accordion-header";
+    new_li.appendChild(title)
 
     let opener = document.createElement("button");
     opener.classList.add("accordion-button", "collapsed");
@@ -167,9 +182,9 @@ function createAccordionItem (item_id, item, parent_id) {
     opener.setAttribute("data-bs-target", `#${item_id}`);
     opener.ariaExpanded = "false";
     opener.setAttribute("aria-controls", item_id);
-    opener.appendChild(document.createTextNode(item.name));
+    // Note: name text added in createBrowseLevel function, since the format of this differs between levels
+
     title.appendChild(opener)
-    new_li.appendChild(title)
 
     // Create body section
     let acc_collapse = document.createElement("div");

@@ -104,9 +104,7 @@ app.post("/add/species/", (req, res) => {
         fs.writeFile(
             BIRDS_FILENAME,
             JSON.stringify(birds_data, null, 4),
-            (e) => {
-                throw e;
-            }
+            writeFileErrorThrower
         );
 
         console.log("/add/species/: New bird successfully written to file")
@@ -145,9 +143,7 @@ app.post("/add/level/", (req, res) => {
 
         fs.writeFile(TAXA_FILENAME,
             JSON.stringify(taxa_data, null, 4),
-            (e) => {
-                throw e;
-            }
+            writeFileErrorThrower
         );
 
         console.log("/add/level/: New taxon successfully written to file")
@@ -193,10 +189,14 @@ app.get("/get/entity/:type/:id", (req, res) => {
                 res.send("Invalid entity type");
                 return;
         }
+        console.log(`/get/entity/: ${type} number ${id} queried`)
+
         res.statusCode = 200;
+        res.contentType("application/json");
         res.send(JSON.stringify(data));
     } catch (e) {
         res.statusCode = 406;
+        res.contentType("application/json");
         res.send(JSON.stringify(e));
     }
 });
@@ -215,6 +215,7 @@ app.get("/get/levels/:parent", (req, res) => {
         parent = parseInt(parent);
     } catch (e) {
         console.log("Error in /get/levels/:", e);
+
         res.statusCode = 406;
         res.send(JSON.stringify("Parent must be an integer"));
         return;
@@ -226,6 +227,7 @@ app.get("/get/levels/:parent", (req, res) => {
     }
 
     console.log(`/get/levels/: Children of ${parent} queried`)
+
     res.statusCode = 200;
     res.send(JSON.stringify(children));
 })
@@ -250,4 +252,10 @@ function findByField(data, field, value) {
 
 function capitalise(s) {
     return s.charAt(0).toUpperCase() + s.slice(1, s.size).toLowerCase()
+}
+
+function writeFileErrorThrower(e) {
+    if (e) {
+        throw e;
+    }
 }
