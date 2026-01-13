@@ -89,29 +89,36 @@ app.post("/add/species/", (req, res) => {
         res.send("Error: missing data from request")
         return;
     }
-    let bird = {
-        "id": birds_data.length, // If you allow deletion, this will produce duplicates
-        "name": name,
-        "genus": genus,
-        "picture": picture,
-        "description": description
-    };
-    birds_data.push(bird);
+    try {
+        let bird = {
+            "id": birds_data.length, // If you allow deletion, this will produce duplicates
+            "name": name,
+            "species": species.toLowerCase(),
+            "genus": genus,
+            "picture": picture,
+            "description": description
+        };
+        birds_data.push(bird);
 
-    // Non-blocking write to file
-    fs.writeFile(BIRDS_FILENAME, JSON.stringify(birds_data, null, 4), (err) => {
-        if (err) {
-            res.statusCode = 500;
-            res.contentType("text/plain")
-            res.send("Error in writing new entry to file");
-        }
-    }); // There's a better way to write this
+        // Non-blocking write to file
+        fs.writeFile(
+            BIRDS_FILENAME,
+            JSON.stringify(birds_data, null, 4),
+            (e) => {throw e}
+        );
 
-    console.log("/add/species/: New bird successfully written to file")
+        console.log("/add/species/: New bird successfully written to file")
 
-    res.statusCode = 200;
-    res.contentType("application/json")
-    res.send(JSON.stringify({"id": bird.id}));
+        res.statusCode = 200;
+        res.contentType("application/json");
+        res.send(JSON.stringify(bird));
+    } catch (e) {
+        console.log("/add/species:", e);
+
+        res.statusCode = 500;
+        res.contentType("text/plain");
+        res.send("Error in writing new entry to file");
+    }
 });
 
 app.post("/add/level/", (req, res) => {
@@ -124,27 +131,31 @@ app.post("/add/level/", (req, res) => {
         return;
     }
 
-    let taxon = {
-        "id": taxa_data.length,
-        "name": name,
-        "description": description,
-        "parent": parent
-    };
+    try {
+        let taxon = {
+            "id": taxa_data.length,
+            "name": capitalise(name),
+            "description": description,
+            "parent": parent
+        };
 
-    taxa_data.push(taxon);
+        taxa_data.push(taxon);
 
-    fs.writeFile(TAXA_FILENAME, JSON.stringify(taxa_data, null, 4), (err) => {
-        if (err) {
-            res.statusCode = 500;
-            res.contentType("text/plain")
-            res.send("Error in writing new entry to file");
-        }
-    });
+        fs.writeFile(TAXA_FILENAME,
+            JSON.stringify(taxa_data, null, 4),
+            (e) => throw e
+        );
 
-    console.log("/add/level/: New taxon successfully written to file")
+        console.log("/add/level/: New taxon successfully written to file")
 
-    res.statusCode = 200;
-    res.send(taxon);
+        res.statusCode = 200;
+        res.contentType("application/json");
+        res.send(taxon);
+    } catch (e) {
+        res.statusCode = 500;
+        res.contentType("text/plain");
+        res.send("Error in writing new entry to file");
+    }
 });
 
 app.post("/search/", (req, res) => {
@@ -231,4 +242,8 @@ function findByField(data, field, value) {
         }
     })
     return out;
+}
+
+function capitalise(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1, s.size).toLowerCase()
 }
