@@ -478,17 +478,26 @@ function loadSearch (query) {
     // TODO
 }
 
-function loadGeneralItem(item) {
-    let bod = document.getElementById("main-container");
-    clearElement(bod); //todo
+function loadGeneralItem(item, title, container) {
+    clearElement(container); //todo
+
+    container.appendChild(createHeader(title));
 }
 
-function loadBird(bird) {
-    loadGeneralItem(bird); // todo
+async function loadBird(bird) {
+    let bod = document.getElementById("main-container");
+
+    let genus = await getTaxon(bird.genus);
+
+    loadGeneralItem(bird, `${genus.name} ${bird.species}`, bod); // todo - maybe put common name on top with scientific name in italics underneath
+
+
 }
 
 function loadTaxon(taxon) {
-    loadGeneralItem(taxon); // todo
+    let bod = document.getElementById("main-container");
+
+    loadGeneralItem(taxon, taxon.name, bod); // todo
 }
 
 async function createBreadcrumbDropdownInner (parent, level, container) {
