@@ -6,7 +6,6 @@ const fs = require("node:fs");
 const hostname = "127.0.0.1";
 const port = 8080;
 
-// TODO: make field for species (latin name)
 /*
     Images could be served locally, however I believe this falls out of scope for the project. It also leads to a
     greater issue with source and copyright
@@ -32,7 +31,6 @@ let birds_data;
 try {
     birds_data = JSON.parse(fs.readFileSync(BIRDS_FILENAME, "utf-8"));
 } catch (e) {
-    // TODO: Maybe add new field: species (latin name)
     birds_data = [];
     fs.writeFileSync(BIRDS_FILENAME, JSON.stringify(birds_data));
 }
@@ -228,6 +226,7 @@ function findByID(data, id) {
 }
 
 function findByField(data, field, value) {
+    // Linear search with indistinct values
     let out = []
     data.forEach(d => {
         if (d[field] === value) {

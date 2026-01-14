@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse);
     document.getElementById("nav-add-btn").addEventListener("click", loadAdd);
 
-    await loadBrowse();
+    await loadIndex();
 })
 
 async function loadIndex() {
@@ -351,7 +351,7 @@ function loadBirdCreator(genus) {
     // Give picture preview
     let preview_div = document.createElement("div");
     preview_div.classList.add("col-md-6", "me-auto", "border");
-    picture_div.style.minHeight = "50px";
+    preview_div.style.minHeight = "50px";
     form.appendChild(preview_div);
 
     let preview_label = document.createElement("h5");
@@ -360,20 +360,24 @@ function loadBirdCreator(genus) {
     preview_div.appendChild(preview_label);
 
     let picture_preview = document.createElement("img");
+    picture_preview.classList.add("p-3", "mx-auto", "object-fit-contain");
+    picture_preview.style.maxWidth = "100%";
+    picture_preview.alt = "Preview of the bird's image which you have uploaded";
+
     picture_preview.hidden = true;
     picture_preview.ariaHidden = "hidden";
-    picture_preview.classList.add("p-3", "mx-auto", "object-fit-contain");
-    picture_preview.width = Math.ceil(preview_div.clientWidth * 0.7);
     preview_div.appendChild(picture_preview);
 
     picture_input.addEventListener("input", () => {
         picture_preview.src = picture_input.value;
-        picture_preview.hidden = false;
-        picture_preview.ariaHidden = "show";
-    });
 
-    window.addEventListener("resize", () => {
-        picture_preview.width = Math.ceil(preview_div.clientWidth * 0.7);
+        if (picture_input.value) {
+            picture_preview.hidden = false;
+            picture_preview.ariaHidden = "show";
+        } else {
+            picture_preview.hidden = true;
+            picture_preview.ariaHidden = "hidden";
+        }
     });
 
     // Submitter for form
@@ -387,13 +391,13 @@ function loadBirdCreator(genus) {
             let response = await fetch("/add/species/", {
                 method: "POST",
                 headers: {
-                    'Accept': 'application/json, text/plain, */*',
+                    'Accept': 'application/json, text/plain',
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(data)
             });
             let content = await response.json();
-            loadBird(content);
+            await loadBird(content);
         } catch (e) {
             alert(e);
         }
@@ -515,12 +519,11 @@ async function loadBird(bird) {
         let img = document.createElement("img");
         img.classList.add("mx-auto", "object-fit-contain", "border", "border-dark");
         img.src = bird.picture;
-        sizeBirdImage(img_col, img);
         img_col.appendChild(img);
-        window.addEventListener("resize", () => {
-            sizeBirdImage(img_col, img);
-        });
         // todo source and alt
+
+        img.style.maxWidth = "50%";
+        img.style.maxHeight = "70%";
     }
 
     // column
@@ -534,11 +537,6 @@ async function loadBird(bird) {
     col.appendChild(desc_p);
 
     // other birds in this genus
-}
-
-function sizeBirdImage(col, img) {
-    img.style.maxWidth = `${Math.min(Math.max(Math.ceil(col.clientWidth * 0.7), 200), 400)}px`;
-    img.style.maxHeight = `${Math.min(Math.max(Math.ceil(window.innerHeight * 0.7), 200), 400)}px`;
 }
 
 function loadTaxon(taxon) {
