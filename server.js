@@ -185,7 +185,10 @@ app.get("/get/entity/:type/:id", (req, res) => {
                 break;
             default:
                 // Premature break on error
+                console.log("/get/entity/: Error invalid entity type");
+
                 res.statusCode = 404;
+                res.contentType("text/plain");
                 res.send("Invalid entity type");
                 return;
         }
@@ -195,6 +198,8 @@ app.get("/get/entity/:type/:id", (req, res) => {
         res.contentType("application/json");
         res.send(JSON.stringify(data));
     } catch (e) {
+        console.log(`/get/entity: ${e}`);
+
         res.statusCode = 406;
         res.contentType("application/json");
         res.send(JSON.stringify(e));
@@ -206,22 +211,15 @@ app.get("/get/levels/:parent", (req, res) => {
 
     res.contentType("application/json");
 
-    if (!parent) {
-        res.statusCode = 406;
-        res.send(JSON.stringify("Parameter required"));
-        return;
-    }
-    try {
-        parent = parseInt(parent);
-    } catch (e) {
-        console.log("Error in /get/levels/:", e);
+    parent = parseInt(parent, 10);
 
+    if (isNaN(parent)) {
         res.statusCode = 406;
-        res.send(JSON.stringify("Parent must be an integer"));
-        return;
+        res.contentType("text/plain");
+        res.send("Error: parameter must be a number");
     }
+
     let children = findByField(taxa_data, "parent", parent);
-
     if (children.length === 0) {
         children = findByField(birds_data, "genus", parent);
     }
@@ -229,6 +227,7 @@ app.get("/get/levels/:parent", (req, res) => {
     console.log(`/get/levels/: Children of ${parent} queried`)
 
     res.statusCode = 200;
+    res.contentType("application/json");
     res.send(JSON.stringify(children));
 })
 

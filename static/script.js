@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     CLASS = await getTaxon(0);
     document.getElementById("nav-index-btn").addEventListener("click", loadIndex);
     document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse);
-    document.getElementById("nav-add-btn").addEventListener("click", loadAdd)
+    document.getElementById("nav-add-btn").addEventListener("click", loadAdd);
 
     await loadAdd();
 })
@@ -521,7 +521,6 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
         }
     } catch (e) {
         alert(e);
-
         clearElement(options);
     }
 
