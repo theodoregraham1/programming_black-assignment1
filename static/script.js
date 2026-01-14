@@ -505,21 +505,23 @@ async function loadBird(bird) {
     small_text.appendChild(document.createTextNode(`${genus.name} ${bird.species}`))
     h2_div.appendChild(small_text);
 
-    // column
-    let img_col = document.createElement("div");
-    img_col.classList.add("col-md-6", "mx-auto", "text-center", "pb-3");
-    bod.appendChild(img_col);
+    if (bird.picture) {
+        // column
+        let img_col = document.createElement("div");
+        img_col.classList.add("col-md-6", "mx-auto", "text-center", "pb-3");
+        bod.appendChild(img_col);
 
-    // image
-    let img = document.createElement("img");
-    img.classList.add("mx-auto", "object-fit-contain", "border", "border-dark");
-    img.src = bird.picture;
-    sizeBirdImage(img_col, img);
-    img_col.appendChild(img);
-    window.addEventListener("resize", () => {
+        // image
+        let img = document.createElement("img");
+        img.classList.add("mx-auto", "object-fit-contain", "border", "border-dark");
+        img.src = bird.picture;
         sizeBirdImage(img_col, img);
-    });
-    // todo source and alt
+        img_col.appendChild(img);
+        window.addEventListener("resize", () => {
+            sizeBirdImage(img_col, img);
+        });
+        // todo source and alt
+    }
 
     // column
     let col = document.createElement("div");
