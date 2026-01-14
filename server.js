@@ -164,46 +164,38 @@ app.post("/search/", (req, res) => {
 
 app.get("/get/entity/:type/:id", (req, res) => {
     let {type, id} = req.params;
+    id = parseInt(id);
 
+    if (isNaN(id)) {
+        res.statusCode = 406;
+        res.contentType("text/plain");
+        res.send("Error: ID must be an integer");
+    }
+
+    let data;
+    switch (type) {
+        case "taxon":
+            data = findByID(taxa_data, id);
+            break;
+
+        case "bird":
+            data = findByID(birds_data, id);
+            break;
+        default:
+            // Premature break on error
+            console.log("/get/entity/: Error invalid entity type");
+
+            res.statusCode = 404;
+            res.contentType("text/plain");
+            res.send("Invalid entity type");
+            return;
+    }
+
+    console.log(`/get/entity/: ${type} number ${id} queried`)
+
+    res.statusCode = 200;
     res.contentType("application/json");
-
-    if (!id || !type) {
-        res.statusCode = 406;
-        res.send(JSON.stringify({}));
-    }
-
-    try {
-        id = parseInt(id);
-
-        let data;
-        switch (type) {
-            case "taxon":
-                data = findByID(taxa_data, id);
-                break;
-            case "bird":
-                data = findByID(birds_data, id);
-                break;
-            default:
-                // Premature break on error
-                console.log("/get/entity/: Error invalid entity type");
-
-                res.statusCode = 404;
-                res.contentType("text/plain");
-                res.send("Invalid entity type");
-                return;
-        }
-        console.log(`/get/entity/: ${type} number ${id} queried`)
-
-        res.statusCode = 200;
-        res.contentType("application/json");
-        res.send(JSON.stringify(data));
-    } catch (e) {
-        console.log(`/get/entity: ${e}`);
-
-        res.statusCode = 406;
-        res.contentType("application/json");
-        res.send(JSON.stringify(e));
-    }
+    res.send(JSON.stringify(data));
 });
 
 app.get("/get/levels/:parent", (req, res) => {
