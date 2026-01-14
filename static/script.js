@@ -474,30 +474,71 @@ function updateBreadcrumb (choice, level, dropdown_container) {
     }
 }
 
-function loadSearch (query) {
-    // TODO
-}
-
-function loadGeneralItem(item, title, container) {
-    clearElement(container); //todo
-
-    container.appendChild(createHeader(title));
-}
+// TODO: Make pages editable as stretch
 
 async function loadBird(bird) {
     let bod = document.getElementById("main-container");
+    clearElement(bod);
 
     let genus = await getTaxon(bird.genus);
 
-    loadGeneralItem(bird, `${genus.name} ${bird.species}`, bod); // todo - maybe put common name on top with scientific name in italics underneath
+    // Create nicer header
+    let h2_div = document.createElement("div");
+    h2_div.classList.add("border-bottom", "col-md-6", "mx-auto", "my-3");
+    bod.appendChild(h2_div);
 
+    let h2 = document.createElement("h2");
+    h2.classList.add("text-center");
+    h2.appendChild(document.createTextNode(bird.name));
+    h2_div.appendChild(h2);
 
+    let small_text = document.createElement("p");
+    small_text.classList.add("fw-light", "fst-italic", "text-center");
+    small_text.appendChild(document.createTextNode(`${genus.name} ${bird.species}`))
+    h2_div.appendChild(small_text);
+
+    // column
+    let img_col = document.createElement("div");
+    img_col.classList.add("col-md-6", "mx-auto", "text-center", "pb-3");
+    bod.appendChild(img_col);
+
+    // image
+    let img = document.createElement("img");
+    img.classList.add("mx-auto", "object-fit-contain", "border", "border-dark");
+    img.src = bird.picture;
+    sizeBirdImage(img_col, img);
+    img_col.appendChild(img);
+    window.addEventListener("resize", () => {
+        sizeBirdImage(img_col, img);
+    });
+    // todo source and alt
+
+    // column
+    let col = document.createElement("div");
+    col.classList.add("col-md-6", "mx-auto");
+    bod.appendChild(col);
+
+    // description
+    let desc_p = document.createElement("p");
+    desc_p.appendChild(document.createTextNode(bird.description));
+    col.appendChild(desc_p);
+
+    // other birds in this genus
+}
+
+function sizeBirdImage(col, img) {
+    img.style.maxWidth = `${Math.min(Math.max(Math.ceil(col.clientWidth * 0.7), 200), 400)}px`;
+    img.style.maxHeight = `${Math.min(Math.max(Math.ceil(window.innerHeight * 0.7), 200), 400)}px`;
 }
 
 function loadTaxon(taxon) {
     let bod = document.getElementById("main-container");
+    clearElement(bod);
 
-    loadGeneralItem(taxon, taxon.name, bod); // todo
+    bod.appendChild(createHeader(taxon.name));
+
+    // description
+    // children of this taxon
 }
 
 async function createBreadcrumbDropdownInner (parent, level, container) {

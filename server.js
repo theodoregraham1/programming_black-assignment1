@@ -158,10 +158,6 @@ app.post("/add/level/", (req, res) => {
     }
 });
 
-app.post("/search/", (req, res) => {
-
-});
-
 app.get("/get/entity/:type/:id", (req, res) => {
     let {type, id} = req.params;
     id = parseInt(id);
