@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse);
     document.getElementById("nav-add-btn").addEventListener("click", loadAdd);
 
-    await loadAdd();
+    await loadBrowse();
 })
 
 async function loadIndex() {
@@ -113,7 +113,12 @@ function loadBrowse () {
 
 function createBrowseLevel (level, parent, parent_level_id) {
     let level_list = document.createElement("div");
-    level_list.classList.add("accordion","accordion-flush", "mt-3");
+    level_list.classList.add("accordion","accordion-flush", "border",);
+
+    if (level !== TAXONOMY_ORDER.length-1) {
+        level_list.classList.add("border-bottom-0", "border-right-0")
+    }
+
     level_list.id = `${parent_level_id}-list`;
 
     let new_level = level-1
@@ -128,9 +133,10 @@ function createBrowseLevel (level, parent, parent_level_id) {
 
             let btn = document.createElement("button");
             btn.appendChild(document.createTextNode(`View ${TAXONOMY_ORDER[new_level].toLowerCase()}`))
-            btn.classList.add("btn", "btn-sm", "btn-secondary")
+            btn.classList.add("btn", "btn-sm", "btn-outline-primary", "mb-3")
             document.getElementById(`${item_id}-body`).appendChild(btn);
 
+            // Put text in header
             let opener = document.getElementById(`${item_id}-opener`);
             let p = document.createElement("span");
             p.classList.add("fw-semibold");
@@ -143,11 +149,13 @@ function createBrowseLevel (level, parent, parent_level_id) {
                 opener.addEventListener("click", () => {
                     document.getElementById(`${item_id}-body`).appendChild(
                         createBrowseLevel(new_level, child, item_id)
-                    )
+                    );
                 }, {once: true}); // Children only ever need to be loaded once
 
                 btn.addEventListener("click", () => loadTaxon(child));
+
             } else {
+                // Title with scientific name as well
                 p.appendChild(document.createTextNode(`${child.name} - (`));
 
                 let italics = document.createElement("span");
@@ -193,11 +201,12 @@ function createAccordionItem (item_id, item, parent_id) {
     acc_collapse.setAttribute("data-bs-parent", `#${parent_id}`);
 
     let acc_body = document.createElement("div");
-    acc_body.classList.add("accordion-body", "border");
+    acc_body.classList.add("accordion-body", "pb-0", "pe-0", "border-bottom", "border-3");
     acc_body.id = `${item_id}-body`
 
     let p = document.createElement("p");
-    p.appendChild(document.createTextNode(item.description));
+    p.classList.add("me-3")
+    p.appendChild(document.createTextNode(cutDescription(item.description)));
     acc_body.appendChild(p);
 
     acc_collapse.appendChild(acc_body);
@@ -474,8 +483,7 @@ function updateBreadcrumb (choice, level, dropdown_container) {
     }
 }
 
-// TODO: Make pages editable as stretch
-
+// TODO: Make entries editable as stretch
 async function loadBird(bird) {
     let bod = document.getElementById("main-container");
     clearElement(bod);
@@ -607,4 +615,12 @@ function clearElement (element) {
     while (element.firstChild) {
         element.removeChild(element.firstChild)
     }
+}
+
+function cutDescription(description) {
+    // Cut an item's description to fit nicely in small displays
+    if (description.length > 200) {
+        description = description.slice(0,200) + "...";
+    }
+    return description;
 }

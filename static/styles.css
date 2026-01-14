@@ -5,4 +5,5 @@
 
 div {
     transition: height 4s;
+    overflow-wrap: break-word;
 }
