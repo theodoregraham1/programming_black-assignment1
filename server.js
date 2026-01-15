@@ -22,7 +22,8 @@ try {
         id: 0,
         name: "Aves",
         description: "The class containing all birds",
-        parent: null
+        parent: null,
+        level: 4
     }]
     fs.writeFileSync(TAXA_FILENAME, JSON.stringify(taxa_data))
 }
@@ -122,8 +123,9 @@ app.post("/add/species/", (req, res) => {
 
 app.post("/add/level/", (req, res) => {
     // Data per level: parent, name, description, id
-    let {parent, name, description} = req.body;
+    let {parent, name, description, level} = req.body;
 
+    // fixme
     if (!name || (!parent && !(parent === 0)) || !description) {
         res.statusCode = 406;
         res.send("Error: missing data from request");
@@ -135,7 +137,8 @@ app.post("/add/level/", (req, res) => {
             "id": taxa_data.length,
             "name": capitalise(name),
             "description": description,
-            "parent": parent
+            "parent": parent,
+            "level": level
         };
 
         taxa_data.push(taxon);

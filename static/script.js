@@ -428,6 +428,7 @@ function loadTaxonCreator(parent, level) {
             let data = new FormData(form);
             data = Object.fromEntries(data.entries());
             data.parent = parent.id;
+            data.level = level;
 
             let response = await fetch("add/level/", {
                 method: "POST",
@@ -612,7 +613,7 @@ async function loadTaxon(taxon) {
     let list_div = document.createElement("div");
     list_div.classList.add("list-group", "ms-3", "mb-3", "col-md-6");
     col.appendChild(list_div);
-    
+
     try {
         let children = await getChildren(taxon.id);
 
