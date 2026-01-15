@@ -11,6 +11,7 @@ const port = 8080;
     greater issue with source and copyright
  */
 
+// TODO add levels to taxons
 const TAXA_FILENAME = "./taxa.json";
 let taxa_data;
 try {

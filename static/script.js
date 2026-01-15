@@ -582,14 +582,46 @@ async function loadBird(bird) {
     }
 }
 
-function loadTaxon(taxon) {
+async function loadTaxon(taxon) {
     let bod = document.getElementById("main-container");
     clearElement(bod);
 
     bod.appendChild(createHeader(taxon.name));
 
+    // column
+    let col = document.createElement("div");
+    col.classList.add("col-md-6", "mx-auto");
+    bod.appendChild(col);
+
     // description
+    let desc_p = document.createElement("p");
+    desc_p.appendChild(document.createTextNode(taxon.description));
+    col.appendChild(desc_p);
+
     // children of this taxon
+    let children_div = document.createElement("div");
+    col.appendChild(children_div);
+
+    let children_title = document.createElement("h4");
+    children_title.classList.add("my-3");
+    children_title.appendChild(document.createTextNode("")); //todo
+    children_title.appendChild(getItalicSpan(taxon.name));
+    children_title.appendChild(document.createTextNode(" :"))
+    children_div.appendChild(children_title);
+
+    let list_div = document.createElement("div");
+    list_div.classList.add("list-group", "ms-3", "mb-3", "col-md-6");
+    col.appendChild(list_div);
+    
+    try {
+        let children = await getChildren(taxon.id);
+
+        for (const child of children) {
+
+        }
+    } catch (e) {
+        alert(e);
+    }
 }
 
 async function createBreadcrumbDropdownInner (parent, level, container) {
