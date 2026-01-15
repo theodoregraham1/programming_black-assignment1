@@ -11,7 +11,7 @@ const port = 8080;
     greater issue with source and copyright
  */
 
-// TODO add levels to taxons
+// TODO add levels to taxa
 const TAXA_FILENAME = "./taxa.json";
 let taxa_data;
 try {
@@ -80,15 +80,20 @@ app.get("/browse/:level/", (req, res) => {
 // For adding check that the item doesn't already exist, if it does replace it
 app.post("/add/species/", (req, res) => {
     // Data per bird: genus, picture, name, id, description
-
     // Validate data
     const {name, species, genus, picture, description} = req.body;
 
-    if (!name || !genus || !description) {
+    if (
+        typeof name !== "string" || typeof species !== "string"
+        || typeof genus !== "number" || typeof picture !== "string"
+        || typeof description !== "string"
+    ) {
         res.statusCode = 406;
-        res.send("Error: missing data from request")
+        res.contentType("text/plain")
+        res.send("Data in request is invalid")
         return;
     }
+
     try {
         let bird = {
             "id": birds_data.length, // If you allow deletion, this will produce duplicates
@@ -112,6 +117,7 @@ app.post("/add/species/", (req, res) => {
         res.statusCode = 200;
         res.contentType("application/json");
         res.send(JSON.stringify(bird));
+
     } catch (e) {
         console.log("/add/species:", e);
 
@@ -125,10 +131,13 @@ app.post("/add/level/", (req, res) => {
     // Data per level: parent, name, description, id
     let {parent, name, description, level} = req.body;
 
-    // fixme
-    if (!name || (!parent && !(parent === 0)) || !description) {
+    if (
+        typeof name !== "string" || typeof parent !== "number"
+        || typeof description !== "string" || typeof level !== "number"
+    ) {
         res.statusCode = 406;
-        res.send("Error: missing data from request");
+        res.contentType("text/plain")
+        res.send("Data in request is invalid")
         return;
     }
 
