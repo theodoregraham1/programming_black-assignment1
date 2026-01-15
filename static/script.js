@@ -122,51 +122,47 @@ function createBrowseLevel (level, parent, parent_level_id) {
     level_list.id = `${parent_level_id}-list`;
 
     let new_level = level-1
-    fetch(`get/levels/${parent.id}`)
-        .then(response => response.json())
-        .then(content => content.forEach(child => {
-            // Load children
-            let item_id = `${parent_level_id}-${child.id}`;
-            let item = createAccordionItem(item_id, child, level_list.id)
+    let children = getChildren(parent.id);
 
-            level_list.appendChild(item);
+    for (const child of children) {
+        // Load children
+        let item_id = `${parent_level_id}-${child.id}`;
+        let item = createAccordionItem(item_id, child, level_list.id)
 
-            let btn = document.createElement("button");
-            btn.appendChild(document.createTextNode(`View ${TAXONOMY_ORDER[new_level].toLowerCase()}`))
-            btn.classList.add("btn", "btn-sm", "btn-outline-primary", "mb-3")
-            document.getElementById(`${item_id}-body`).appendChild(btn);
+        level_list.appendChild(item);
 
-            // Put text in header
-            let opener = document.getElementById(`${item_id}-opener`);
-            let p = document.createElement("span");
-            p.classList.add("fw-semibold");
-            opener.appendChild(p);
+        let btn = document.createElement("button");
+        btn.appendChild(document.createTextNode(`View ${TAXONOMY_ORDER[new_level].toLowerCase()}`))
+        btn.classList.add("btn", "btn-sm", "btn-outline-primary", "mb-3")
+        document.getElementById(`${item_id}-body`).appendChild(btn);
 
-            if (new_level > 0) {
-                p.appendChild(document.createTextNode(child.name));
+        // Put text in header
+        let opener = document.getElementById(`${item_id}-opener`);
+        let p = document.createElement("span");
+        p.classList.add("fw-semibold");
+        opener.appendChild(p);
 
-                // If the level of the next item is a taxon, load its children when it is opened
-                opener.addEventListener("click", () => {
-                    document.getElementById(`${item_id}-body`).appendChild(
-                        createBrowseLevel(new_level, child, item_id)
-                    );
-                }, {once: true}); // Children only ever need to be loaded once
+        if (new_level > 0) {
+            p.appendChild(document.createTextNode(child.name));
 
-                btn.addEventListener("click", () => loadTaxon(child));
+            // If the level of the next item is a taxon, load its children when it is opened
+            opener.addEventListener("click", () => {
+                document.getElementById(`${item_id}-body`).appendChild(
+                    createBrowseLevel(new_level, child, item_id)
+                );
+            }, {once: true}); // Children only ever need to be loaded once
 
-            } else {
-                // Title with scientific name as well
-                p.appendChild(document.createTextNode(`${child.name} - (`));
+            btn.addEventListener("click", () => loadTaxon(child));
 
-                let italics = document.createElement("span");
-                italics.classList.add("fst-italic");
-                italics.appendChild(document.createTextNode(`${parent.name} ${child.species}`));
-                p.appendChild(italics);
-                p.appendChild(document.createTextNode(")"));
+        } else {
+            // Title with scientific name as well
+            p.appendChild(document.createTextNode(`${child.name} - (`));
+            p.appendChild(getItalicSpan(`${parent.name} ${child.species}`));
+            p.appendChild(document.createTextNode(")"));
 
-                btn.addEventListener("click", () => loadBird(child));
-            }
-        }));
+            btn.addEventListener("click", () => loadBird(child));
+        }
+    }
 
     return level_list
 }
@@ -537,6 +533,53 @@ async function loadBird(bird) {
     col.appendChild(desc_p);
 
     // other birds in this genus
+    let genus_div = document.createElement("div");
+    col.appendChild(genus_div);
+
+    let genus_title = document.createElement("h4");
+    genus_title.classList.add("my-3");
+    genus_title.appendChild(document.createTextNode("Other birds in the "));
+    genus_title.appendChild(getItalicSpan(genus.name));
+    genus_title.appendChild(document.createTextNode(" genus:"))
+    genus_div.appendChild(genus_title);
+
+    let list_div = document.createElement("div");
+    list_div.classList.add("list-group", "ms-3", "mb-3", "col-md-6");
+    col.appendChild(list_div);
+
+    try {
+        let other_birds = await getChildren(genus.id);
+
+        for (const ob of other_birds) {
+            // Put up a thing saying this is the only bird in the genus
+            let a = document.createElement("a");
+            a.classList.add("list-group-item", "list-group-item-action");
+            a.href = "#";
+            list_div.appendChild(a);
+
+            let div = document.createElement("div");
+            a.appendChild(div);
+
+            let title = document.createElement("p");
+            title.classList.add("p-0", "m-0", "fw-semibold")
+            title.appendChild(document.createTextNode(ob.name));
+            div.appendChild(title);
+
+            let scientific = document.createElement("small");
+            scientific.appendChild(getItalicSpan(`${genus.name} ${ob.species}`));
+            div.appendChild(scientific);
+
+            if (ob.id !== bird.id) {
+                a.addEventListener("click", () => {
+                    loadBird(ob);
+                })
+            } else {
+                a.classList.add("active");
+            }
+        }
+    } catch (e) {
+        alert(e);
+    }
 }
 
 function loadTaxon(taxon) {
@@ -565,8 +608,7 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
     container.appendChild(options);
 
     try {
-        let response = await fetch(`get/levels/${parent.id}`);
-        let choices = await response.json();
+        let choices = getChildren(parent.id);
 
         for (let i = 0; i < choices.length; i++) {
             let li = document.createElement("li");
@@ -604,6 +646,16 @@ async function getTaxon(id) {
     }
 }
 
+async function getChildren(id) {
+    try {
+        let response = await fetch(`get/levels/${id}`);
+
+        return await response.json();
+    } catch (e) {
+        throw e
+    }
+}
+
 function createHeader(title) {
     let h2 = document.createElement("h2");
     h2.classList.add("border-bottom", "col-md-6", "text-center", "my-3", "pb-2", "mx-auto");
@@ -623,4 +675,11 @@ function cutDescription(description) {
         description = description.slice(0,200) + "...";
     }
     return description;
+}
+
+function getItalicSpan(text) {
+    let span = document.createElement("span");
+    span.className = "fst-italic";
+    span.appendChild(document.createTextNode(text))
+    return span;
 }
