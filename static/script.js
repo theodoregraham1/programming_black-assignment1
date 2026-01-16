@@ -623,9 +623,11 @@ async function loadTaxon(taxon) {
 
     let children_title = document.createElement("h4");
     children_title.classList.add("mt-3");
-    children_title.appendChild(document.createTextNode(`${TAXONOMY_ORDER_PLURALS[taxon.level-1]} in `));
-    children_title.appendChild(getItalicSpan(taxon.name));
-    children_title.appendChild(document.createTextNode(":"))
+    children_title.append(
+        document.createTextNode(`${TAXONOMY_ORDER_PLURALS[taxon.level-1]} in `),
+        getItalicSpan(taxon.name),
+        document.createTextNode(":")
+    );
     children_div.appendChild(children_title);
 
     try {
@@ -719,7 +721,7 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
     container.appendChild(options);
 
     try {
-        let choices = getChildren(parent.id);
+        let choices = await getChildren(parent.id);
 
         for (let i = 0; i < choices.length; i++) {
             let li = document.createElement("li");
