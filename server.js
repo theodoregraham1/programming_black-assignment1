@@ -49,7 +49,15 @@ app.get("/", (req, res) => {
 app.get("/index/cards/:n", (req, res) => {
     let {n} = req.params;
 
-    if (n > birds_data.length) {
+    n = parseInt(n);
+    if (isNaN(n)) {
+        res.statusCode = 406;
+        res.contentType("text/plain")
+        res.send("Request is invalid")
+        return;
+    }
+
+    if (n >= birds_data.length) {
         res.statusCode = 200;
         res.contentType("application/json");
         res.send(JSON.stringify(birds_data));
@@ -71,10 +79,6 @@ app.get("/index/cards/:n", (req, res) => {
     res.statusCode = 200;
     res.contentType("application/json");
     res.send(JSON.stringify(birds))
-});
-
-app.get("/browse/:level/", (req, res) => {
-
 });
 
 // For adding check that the item doesn't already exist, if it does replace it

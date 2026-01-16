@@ -19,9 +19,10 @@ async function loadIndex() {
 
     bod.append(createHeader("Birdipedia"))
 
+    // TODOM
     const NUMBER_OF_CARDS = 3;
     let row = document.createElement("div");
-    row.className = "row";
+    row.className = "d-flex flex-row align-items-stretch";
 
     try {
         let response = await fetch(`index/cards/${NUMBER_OF_CARDS}`);
@@ -37,21 +38,24 @@ async function loadIndex() {
 function makeCard(data) {
     // Constant elements
     let col = document.createElement("div");
-    col.classList.add("col-lg-auto", "mb-3");
+    col.classList.add("col-lg-auto", "mb-3", "me-3", "d-flex");
 
     let card = document.createElement("div");
     card.className = "card";
+    //card.style.minHeight = "100%";
+    card.style.maxWidth = "300px";
     col.appendChild(card);
 
+    let img_div = document.createElement("div");
+    card.appendChild(img_div)
+
     let img = document.createElement("img");
-    img.alt = "..."; // do
+    img.alt = "..."; // todo
     img.className = "card-img-top";
-    img.style.width = "300px";
-    card.style.maxWidth = "300px";
-    card.appendChild(img);
+    img_div.appendChild(img);
 
     let card_bod = document.createElement("div");
-    card_bod.className = "card-body";
+    card_bod.className = "card-body d-flex flex-column";
     card.appendChild(card_bod);
 
     let card_title = document.createElement("h4");
@@ -63,23 +67,27 @@ function makeCard(data) {
     card_bod.appendChild(card_text);
 
     let card_btn = document.createElement("button");
-    card_btn.classList.add("btn", "btn-primary");
+    card_btn.classList.add("btn", "btn-primary", "mt-auto");
     card_btn.appendChild(document.createTextNode("Read more"));
     card_bod.appendChild(card_btn);
 
     try {
         let {id, name, description, picture} = data;
 
-        img.src = picture;
+        if (picture) {
+            img.src = picture;
+        } else {
+            img_div.hidden = true;
+            img_div.ariaHidden = "hide";
+        }
+
         card_title.appendChild(document.createTextNode(name));
 
-        card_text.appendChild(document.createTextNode(description));
+        card_text.appendChild(document.createTextNode(cutDescription(description)));
         card_btn.id = `card-${id}-btn`;
         card_btn.addEventListener("click", () => loadBird(data))
 
     } catch (e) {
-        // Replace it with placeholder
-        img.src = "...";
 
         card_title.classList.add("placeholder-glow");
         let title_holder = document.createElement("span");
