@@ -19,7 +19,7 @@ async function loadIndex() {
 
     bod.append(createHeader("Birdipedia"))
 
-    // TODOM
+    // TODO
     const NUMBER_OF_CARDS = 3;
     let row = document.createElement("div");
     row.className = "d-flex flex-row align-items-stretch";
@@ -510,7 +510,7 @@ async function loadBird(bird) {
     h2_div.appendChild(h2);
 
     let small_text = document.createElement("p");
-    small_text.classList.add("fw-light", "fst-italic", "text-center");
+    small_text.classList.add("fw-light", "fst-italic", "text-center", "hover-link");
     small_text.appendChild(document.createTextNode(`${genus.name} ${bird.species}`))
     h2_div.appendChild(small_text);
 
@@ -545,15 +545,15 @@ async function loadBird(bird) {
     let genus_div = document.createElement("div");
     col.appendChild(genus_div);
 
-    let genus_title = document.createElement("h4");
-    genus_title.classList.add("my-3");
+    let genus_title = document.createElement("a");
+    genus_title.classList.add("my-3", "h4", "hover-link");
     genus_title.appendChild(document.createTextNode("Other birds in the "));
     genus_title.appendChild(getItalicSpan(genus.name));
     genus_title.appendChild(document.createTextNode(" genus:"))
     genus_div.appendChild(genus_title);
 
     let list_div = document.createElement("div");
-    list_div.classList.add("list-group", "ms-3", "mb-3", "col-md-6");
+    list_div.classList.add("list-group", "ms-3", "my-3", "col-md-6");
     col.appendChild(list_div);
 
     try {
