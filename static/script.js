@@ -636,8 +636,9 @@ async function loadTaxon(taxon) {
         alert(e);
     }
 
-    // siblings of the taxon
+    // parts of the page for taxa that are not Aves
     if (taxon.level !== TAXONOMY_ORDER.length-1) {
+        // siblings of the taxon
         let siblings_div = document.createElement("div");
         col.appendChild(siblings_div);
 
@@ -675,6 +676,30 @@ async function loadTaxon(taxon) {
             document.createTextNode(` ${TAXONOMY_ORDER[parent.level].toLowerCase()}`)
             );
         siblings_div.appendChild(parent_button);
+
+        // buttons
+        let buttons_div = document.createElement("div");
+        buttons_div.classList.add("d-flex", "flex-row", "mt-5", "pt-3", "border-top");
+        col.appendChild(buttons_div);
+
+        // delete button
+        let delete_button = document.createElement("button");
+        delete_button.classList.add("btn", "btn-danger")
+        delete_button.appendChild(document.createTextNode("Delete entry"));
+
+        delete_button.addEventListener("click", () => {
+            delete_button.classList.remove("btn-danger");
+            delete_button.classList.add("btn-secondary");
+            delete_button.firstChild.remove();
+            delete_button.appendChild(document.createTextNode("Confirm deletion"));
+
+            delete_button.addEventListener("click", () => {
+                fetch(`delete/taxon/${taxon.id}`)
+                    .catch((e) => alert(e));
+                loadTaxon(parent);
+            })
+        });
+        buttons_div.appendChild(delete_button);
     }
 }
 
