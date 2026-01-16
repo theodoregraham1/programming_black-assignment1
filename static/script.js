@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse);
     document.getElementById("nav-add-btn").addEventListener("click", loadAdd);
 
-    await loadTaxon(CLASS);
+    loadIndex();
 })
 
 async function loadIndex() {
@@ -521,12 +521,14 @@ async function loadBird(bird) {
     let h2 = document.createElement("h2");
     h2.classList.add("text-center");
     h2.appendChild(document.createTextNode(bird.name));
-    h2_div.appendChild(h2);
 
     let small_text = document.createElement("p");
     small_text.classList.add("fw-light", "fst-italic", "text-center", "hover-link");
     small_text.appendChild(document.createTextNode(`${genus.name} ${bird.species}`))
-    h2_div.appendChild(small_text);
+    h2_div.append(
+        h2,
+        small_text
+    );
 
     if (bird.picture) {
         // column
@@ -561,39 +563,37 @@ async function loadBird(bird) {
 
     let genus_title = document.createElement("h4");
     genus_title.classList.add("my-3");
-    genus_title.appendChild(document.createTextNode("Other birds in the "));
-    genus_title.appendChild(getItalicSpan(genus.name));
-    genus_title.appendChild(document.createTextNode(" genus:"))
+    genus_title.append(
+        document.createTextNode("Other birds in the "),
+        getItalicSpan(genus.name),
+        document.createTextNode(" genus:")
+    );
     genus_div.appendChild(genus_title);
-
-    let list_div = document.createElement("div");
-    list_div.classList.add("list-group", "ms-3", "my-3", "col-md-6");
-    col.appendChild(list_div);
 
     try {
         let other_birds = await getChildren(genus.id);
 
-        for (const ob of other_birds) {
-            // Put up a thing saying this is the only bird in the genus
-            let a = document.createElement("a");
-            a.classList.add("list-group-item", "list-group-item-action");
-            a.href = "#";
-            list_div.appendChild(a);
+        createListGroup(genus, other_birds, genus_div);
 
-            a.appendChild(createBothNamesTitle(ob, genus));
+        let selected = document.getElementById(`list-group-${genus.id}-item-${bird.id}`);
+        selected.classList.add("active");
+        selected.ariaCurrent = "true";
 
-            if (ob.id !== bird.id) {
-                a.addEventListener("click", () => {
-                    loadBird(ob);
-                });
-            } else {
-                a.classList.add("active");
-                a.ariaCurrent = "true";
-            }
-        }
     } catch (e) {
         alert(e);
     }
+
+    let genus_button = document.createElement("button");
+    genus_button.classList.add("btn", "btn-outline-secondary");
+    genus_button.addEventListener("click", () => {
+        loadTaxon(genus);
+    });
+    genus_button.append(
+        document.createTextNode("View "),
+        getItalicSpan(genus.name),
+        document.createTextNode(" genus")
+        );
+    genus_div.appendChild(genus_button);
 }
 
 async function loadTaxon(taxon) {
@@ -623,7 +623,7 @@ async function loadTaxon(taxon) {
 
     let children_title = document.createElement("h4");
     children_title.classList.add("mt-3");
-    children_title.appendChild(document.createTextNode(`${TAXONOMY_ORDER_PLURALS[taxon.level-1]} in `)); //todo
+    children_title.appendChild(document.createTextNode(`${TAXONOMY_ORDER_PLURALS[taxon.level-1]} in `));
     children_title.appendChild(getItalicSpan(taxon.name));
     children_title.appendChild(document.createTextNode(":"))
     children_div.appendChild(children_title);
@@ -631,42 +631,50 @@ async function loadTaxon(taxon) {
     try {
         let children = await getChildren(taxon.id);
 
-        if (children.length !== 0) {
-            let list_div = document.createElement("div");
-            list_div.classList.add("list-group", "ms-2", "mb-3", "col-md-6");
-            children_div.appendChild(list_div);
-
-            for (const child of children) {
-                let a = document.createElement("a");
-                a.classList.add("list-group-item", "list-group-item-action");
-                a.href = "#";
-                list_div.appendChild(a);
-
-                if (taxon.level === 1) {
-                    a.appendChild(createBothNamesTitle(child, taxon));
-                    a.addEventListener("click", () => {
-                        loadBird(child);
-                    });
-                } else {
-                    let title = document.createElement("p");
-                    title.classList.add("p-0", "m-0", "fw-semibold")
-                    title.appendChild(document.createTextNode(child.name));
-                    a.appendChild(title);
-
-                    a.addEventListener("click", () => {
-                        loadTaxon(child);
-                    });
-                }
-            }
-        } else {
-            let p = document.createElement("p");
-            p.appendChild(document.createTextNode(
-                `There are no entries in this ${TAXONOMY_ORDER[taxon.level.toLowerCase()]}`
-            ));
-            children_div.appendChild(p);
-        }
+        createListGroup(taxon, children, children_div);
     } catch (e) {
         alert(e);
+    }
+
+    // siblings of the taxon
+    if (taxon.level !== TAXONOMY_ORDER.length-1) {
+        let siblings_div = document.createElement("div");
+        col.appendChild(siblings_div);
+
+        let parent = await getTaxon(taxon.parent);
+
+        let siblings_title = document.createElement("h4");
+        siblings_title.classList.add("mt-3");
+        siblings_title.append(
+            document.createTextNode(`Other ${TAXONOMY_ORDER_PLURALS[taxon.level].toLowerCase()} in the `),
+            getItalicSpan(parent.name),
+            document.createTextNode(` ${TAXONOMY_ORDER[parent.level].toLowerCase()}:`)
+        );
+        siblings_div.appendChild(siblings_title);
+
+        try {
+            let siblings = await getChildren(parent.id);
+
+            createListGroup(parent, siblings, siblings_div);
+
+            let selected = document.getElementById(`list-group-${parent.id}-item-${taxon.id}`);
+            selected.classList.add("active");
+            selected.ariaCurrent = "true";
+        } catch (e) {
+            alert(e);
+        }
+
+        let parent_button = document.createElement("button");
+        parent_button.classList.add("btn", "btn-outline-secondary");
+        parent_button.addEventListener("click", () => {
+            loadTaxon(parent);
+        });
+        parent_button.append(
+            document.createTextNode("View "),
+            getItalicSpan(parent.name),
+            document.createTextNode(` ${TAXONOMY_ORDER[parent.level].toLowerCase()}`)
+            );
+        siblings_div.appendChild(parent_button);
     }
 }
 
@@ -715,13 +723,13 @@ async function createBreadcrumbDropdownInner (parent, level, container) {
 }
 
 async function getTaxon(id) {
-    try {
-        let response = await fetch(`get/entity/taxon/${id}`)
+    let response = await fetch(`get/entity/taxon/${id}`)
 
-        return await response.json()
-    } catch (e) {
-        throw e;
+    if (!response.ok) {
+        throw new Error(`${response.status}: response failed`);
     }
+
+    return await response.json();
 }
 
 async function getChildren(id) {
@@ -732,6 +740,44 @@ async function getChildren(id) {
     }
 
     return await response.json();
+}
+
+function createListGroup(parent, children, container) {
+        if (children.length !== 0) {
+            let list_div = document.createElement("div");
+            list_div.classList.add("list-group", "ms-2", "mb-3", "col-md-6");
+            container.appendChild(list_div);
+
+            for (const child of children) {
+                let a = document.createElement("a");
+                a.classList.add("list-group-item", "list-group-item-action");
+                a.href = "#";
+                a.id = `list-group-${parent.id}-item-${child.id}`;
+                list_div.appendChild(a);
+
+                if (parent.level === 1) {
+                    a.appendChild(createBothNamesTitle(child, parent));
+                    a.addEventListener("click", () => {
+                        loadBird(child);
+                    });
+                } else {
+                    let title = document.createElement("p");
+                    title.classList.add("p-0", "m-0", "fw-semibold")
+                    title.appendChild(document.createTextNode(child.name));
+                    a.appendChild(title);
+
+                    a.addEventListener("click", () => {
+                        loadTaxon(child);
+                    });
+                }
+            }
+        } else {
+            let p = document.createElement("p");
+            p.appendChild(document.createTextNode(
+                `There are no entries in this ${TAXONOMY_ORDER[parent.level.toLowerCase()]}`
+            ));
+            container.appendChild(p);
+        }
 }
 
 function createHeader(title) {
