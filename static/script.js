@@ -116,25 +116,35 @@ function loadBrowse () {
     h3.appendChild(document.createTextNode(CLASS.name));
     bod.appendChild(h3);
 
-    bod.append(createBrowseLevel(TAXONOMY_ORDER.length-1, CLASS, "browse-accordion"));
+    createBrowseLevel(CLASS, "0");
 }
 
-function createBrowseLevel (level, parent, parent_level_id) {
+async function createBrowseLevel (parent, parent_level_id) {
     let level_list = document.createElement("div");
     level_list.classList.add("accordion","accordion-flush", "border",);
 
-    if (level !== TAXONOMY_ORDER.length-1) {
+    if (parent.level !== TAXONOMY_ORDER.length-1) {
         level_list.classList.add("border-bottom-0", "border-right-0")
     }
 
+    let container;
+    if (parent_level_id !== "0") {
+        container = document.getElementById(`${parent_level_id}-body`)
+    } else {
+        container = document.getElementById("main-container");
+    }
+    container.appendChild(level_list);
+
     level_list.id = `${parent_level_id}-list`;
 
-    let new_level = level-1
-    let children = getChildren(parent.id);
+    let new_level = parent.level-1;
+    let children = await getChildren(parent.id);
 
     for (const child of children) {
+        let {id, name} = child;
+
         // Load children
-        let item_id = `${parent_level_id}-${child.id}`;
+        let item_id = `${parent_level_id}-${id}`;
         let item = createAccordionItem(item_id, child, level_list.id)
 
         level_list.appendChild(item);
@@ -151,28 +161,26 @@ function createBrowseLevel (level, parent, parent_level_id) {
         opener.appendChild(p);
 
         if (new_level > 0) {
-            p.appendChild(document.createTextNode(child.name));
+            p.appendChild(document.createTextNode(name));
 
             // If the level of the next item is a taxon, load its children when it is opened
             opener.addEventListener("click", () => {
-                document.getElementById(`${item_id}-body`).appendChild(
-                    createBrowseLevel(new_level, child, item_id)
-                );
+                createBrowseLevel(child, item_id)
             }, {once: true}); // Children only ever need to be loaded once
 
             btn.addEventListener("click", () => loadTaxon(child));
 
         } else {
             // Title with scientific name as well
-            p.appendChild(document.createTextNode(`${child.name} - (`));
-            p.appendChild(getItalicSpan(`${parent.name} ${child.species}`));
+            let {species} = child;
+
+            p.appendChild(document.createTextNode(`${name} - (`));
+            p.appendChild(getItalicSpan(`${parent.name} ${species}`));
             p.appendChild(document.createTextNode(")"));
 
             btn.addEventListener("click", () => loadBird(child));
         }
     }
-
-    return level_list
 }
 
 function createAccordionItem (item_id, item, parent_id) {
@@ -688,13 +696,13 @@ async function getTaxon(id) {
 }
 
 async function getChildren(id) {
-    try {
-        let response = await fetch(`get/levels/${id}`);
+    let response = await fetch(`get/levels/${id}`);
 
-        return await response.json();
-    } catch (e) {
-        throw e
+    if (!response.ok) {
+        throw new Error(`${response.status}: response failed`);
     }
+
+    return await response.json();
 }
 
 function createHeader(title) {

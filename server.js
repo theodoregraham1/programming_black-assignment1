@@ -212,8 +212,6 @@ app.get("/get/entity/:type/:id", (req, res) => {
 app.get("/get/levels/:parent", (req, res) => {
     let {parent} = req.params;
 
-    res.contentType("application/json");
-
     parent = parseInt(parent, 10);
 
     if (isNaN(parent)) {
@@ -226,7 +224,7 @@ app.get("/get/levels/:parent", (req, res) => {
     if (children.length === 0) {
         children = findByField(birds_data, "genus", parent);
     }
-
+    console.log(children);
     console.log(`/get/levels/: Children of ${parent} queried`)
 
     res.statusCode = 200;
