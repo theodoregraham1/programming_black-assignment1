@@ -7,13 +7,3 @@ div {
     transition: height 4s;
     overflow-wrap: break-word;
 }
-
-a.hover-link {
-    color: black;
-    text-decoration: none;
-}
-
-a.hover-link:hover {
-    color: blue;
-    text-decoration: underline;
-}

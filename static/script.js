@@ -545,8 +545,8 @@ async function loadBird(bird) {
     let genus_div = document.createElement("div");
     col.appendChild(genus_div);
 
-    let genus_title = document.createElement("a");
-    genus_title.classList.add("my-3", "h4", "hover-link");
+    let genus_title = document.createElement("h4");
+    genus_title.classList.add("my-3");
     genus_title.appendChild(document.createTextNode("Other birds in the "));
     genus_title.appendChild(getItalicSpan(genus.name));
     genus_title.appendChild(document.createTextNode(" genus:"))
