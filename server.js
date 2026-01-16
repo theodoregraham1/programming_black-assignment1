@@ -109,12 +109,7 @@ app.post("/add/species/", (req, res) => {
         };
         birds_data.push(bird);
 
-        // Non-blocking write to file
-        fs.writeFile(
-            BIRDS_FILENAME,
-            JSON.stringify(birds_data, null, 4),
-            writeFileErrorThrower
-        );
+        writeBirds();
 
         console.log("/add/species/: New bird successfully written to file")
 
@@ -156,10 +151,7 @@ app.post("/add/level/", (req, res) => {
 
         taxa_data.push(taxon);
 
-        fs.writeFile(TAXA_FILENAME,
-            JSON.stringify(taxa_data, null, 4),
-            writeFileErrorThrower
-        );
+        writeTaxa();
 
         console.log("/add/level/: New taxon successfully written to file")
 
@@ -177,10 +169,10 @@ app.get("/get/entity/:type/:id", (req, res) => {
     let {type, id} = req.params;
     id = parseInt(id);
 
-    if (isNaN(id)) {
+    if (isNaN(id) || typeof type !== "string") {
         res.statusCode = 406;
         res.contentType("text/plain");
-        res.send("Error: ID must be an integer");
+        res.send("Error: Invalid parameters");
     }
 
     let data;
@@ -230,7 +222,54 @@ app.get("/get/levels/:parent", (req, res) => {
     res.statusCode = 200;
     res.contentType("application/json");
     res.send(JSON.stringify(children));
-})
+});
+
+app.get("/delete/:type/:id", (req, res) => {
+    let {type, id} = req.params;
+    id = parseInt(id);
+
+    if (isNaN(id) || typeof type !== "string") {
+        res.statusCode = 406;
+        res.contentType("text/plain");
+        res.send("Error: Invalid parameters");
+    }
+
+    try {
+        switch (type) {
+            case "taxon":
+                // don't allow Aves to be deleted
+                if (id !== 0) {
+                    let taxon = findByID(taxa_data, id);
+
+                    if (taxon) {
+                        deleteTaxon(taxon);
+                    }
+                }
+                break;
+
+            case "bird":
+                deleteByField(birds_data, "id", id);
+                writeBirds()
+                break;
+
+            default:
+                // Premature break on error
+                console.log("/get/entity/: Error invalid entity type");
+
+                res.statusCode = 404; // todo handle 404s
+                res.contentType("text/plain");
+                res.send("Invalid entity type");
+                return;
+        }
+    } catch (e) {
+        res.statusCode = 500;
+        res.contentType("application/json");
+        res.send(JSON.stringify(e));
+    }
+
+    res.statusCode = 200;
+    res.send();
+});
 
 app.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}`)
@@ -242,13 +281,41 @@ function findByID(data, id) {
 
 function findByField(data, field, value) {
     // Linear search with indistinct values
-    let out = []
-    data.forEach(d => {
+    let out = [];
+    for (const d of data) {
         if (d[field] === value) {
             out.push(d);
         }
-    })
+    }
     return out;
+}
+
+function deleteByField(data, field, value) {
+    // Due to size changing if multiple items are removed, uses a reconstruct approach
+    // Maintains order of elements
+    let out = [];
+    for (let i=0; i < data.length; i++) {
+        let d = data[i];
+        if (d[field] !== value) {
+            out.push(d);
+        }
+    }
+    return out;
+}
+
+function deleteTaxon(taxon) {
+    // delete a taxon and all its children recursively
+    // base case when taxon is a genus
+    if (taxon.level === 1) {
+        deleteByField(birds_data, "genus", taxon.id);
+
+    } else {
+        for (const child of findByField(taxa_data, "parent", taxon.id)) {
+            deleteTaxon(child);
+        }
+    }
+
+    deleteByField(taxa_data, "id", taxon.id);
 }
 
 function capitalise(s) {
@@ -259,4 +326,21 @@ function writeFileErrorThrower(e) {
     if (e) {
         throw e;
     }
+}
+
+function writeBirds() {
+    // Non-blocking write to file
+    fs.writeFile(
+        BIRDS_FILENAME,
+        JSON.stringify(birds_data, null, 4),
+        writeFileErrorThrower
+    );
+}
+
+function writeTaxa() {
+    fs.writeFile(
+        TAXA_FILENAME,
+        JSON.stringify(taxa_data, null, 4),
+        writeFileErrorThrower
+    );
 }
