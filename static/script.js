@@ -138,48 +138,52 @@ async function createBrowseLevel (parent, parent_level_id) {
     level_list.id = `${parent_level_id}-list`;
 
     let new_level = parent.level-1;
-    let children = await getChildren(parent.id);
+    try {
+        let children = await getChildren(parent.id);
 
-    for (const child of children) {
-        let {id, name} = child;
+        for (const child of children) {
+            let {id, name} = child;
 
-        // Load children
-        let item_id = `${parent_level_id}-${id}`;
-        let item = createAccordionItem(item_id, child, level_list.id)
+            // Load children
+            let item_id = `${parent_level_id}-${id}`;
+            let item = createAccordionItem(item_id, child, level_list.id)
 
-        level_list.appendChild(item);
+            level_list.appendChild(item);
 
-        let btn = document.createElement("button");
-        btn.appendChild(document.createTextNode(`View ${TAXONOMY_ORDER[new_level].toLowerCase()}`))
-        btn.classList.add("btn", "btn-sm", "btn-outline-primary", "mb-3")
-        document.getElementById(`${item_id}-body`).appendChild(btn);
+            let btn = document.createElement("button");
+            btn.appendChild(document.createTextNode(`View ${TAXONOMY_ORDER[new_level].toLowerCase()}`))
+            btn.classList.add("btn", "btn-sm", "btn-outline-primary", "mb-3")
+            document.getElementById(`${item_id}-body`).appendChild(btn);
 
-        // Put text in header
-        let opener = document.getElementById(`${item_id}-opener`);
-        let p = document.createElement("span");
-        p.classList.add("fw-semibold");
-        opener.appendChild(p);
+            // Put text in header
+            let opener = document.getElementById(`${item_id}-opener`);
+            let p = document.createElement("span");
+            p.classList.add("fw-semibold");
+            opener.appendChild(p);
 
-        if (new_level > 0) {
-            p.appendChild(document.createTextNode(name));
+            if (new_level > 0) {
+                p.appendChild(document.createTextNode(name));
 
-            // If the level of the next item is a taxon, load its children when it is opened
-            opener.addEventListener("click", () => {
-                createBrowseLevel(child, item_id)
-            }, {once: true}); // Children only ever need to be loaded once
+                // If the level of the next item is a taxon, load its children when it is opened
+                opener.addEventListener("click", () => {
+                    createBrowseLevel(child, item_id)
+                }, {once: true}); // Children only ever need to be loaded once
 
-            btn.addEventListener("click", () => loadTaxon(child));
+                btn.addEventListener("click", () => loadTaxon(child));
 
-        } else {
-            // Title with scientific name as well
-            let {species} = child;
+            } else {
+                // Title with scientific name as well
+                let {species} = child;
 
-            p.appendChild(document.createTextNode(`${name} - (`));
-            p.appendChild(getItalicSpan(`${parent.name} ${species}`));
-            p.appendChild(document.createTextNode(")"));
+                p.appendChild(document.createTextNode(`${name} - (`));
+                p.appendChild(getItalicSpan(`${parent.name} ${species}`));
+                p.appendChild(document.createTextNode(")"));
 
-            btn.addEventListener("click", () => loadBird(child));
+                btn.addEventListener("click", () => loadBird(child));
+            }
         }
+    } catch (e) {
+        alert(e);
     }
 }
 
