@@ -319,7 +319,7 @@ app.get("/index/cards/:n", (req, res) => {
         let i = Math.floor(Math.random() * birds.size());
 
         let bird = birds_data.getList()[i];
-        if (!bird || bird in birds) { // todo check this
+        if (!bird || bird in birds) {
             i--;
         } else {
             birds.push(bird);
@@ -451,7 +451,7 @@ app.get("/get/entity/:type/:id", (req, res) => {
     }
 });
 
-app.get("/get/levels/:parent", (req, res) => {
+app.get("/get/children/:parent", (req, res) => {
     let {parent} = req.params;
 
     parent = parseInt(parent);
@@ -476,12 +476,31 @@ app.get("/get/levels/:parent", (req, res) => {
     } else {
         children = birds_data.findByField("genus", parent);
     }
-    console.log(`/get/levels/: Children of ${parent} queried`)
+    console.log(`/get/children/: Children of ${parent} queried`)
 
     res.statusCode = 200;
     res.contentType("application/json");
     res.send(JSON.stringify(children));
 });
+
+app.get("/get/level/:level", (req, res) => {
+    let {level} = req.params;
+
+    level = parseInt(level);
+
+    if (isNaN(level) || level < 1 || level > 4) {
+        res.statusCode = 406;
+        res.contentType("text/plain");
+        res.send("Error: parameter must be a number");
+        return;
+    }
+
+    console.log(`get/level/: level ${level} queried`);
+
+    res.statusCode = 200;
+    res.contentType("application/json")
+    res.send(JSON.stringify(taxa_data.findByField("level", level)));
+})
 
 app.get("/delete/:type/:id", (req, res) => {
     let {type, id} = req.params;

@@ -435,8 +435,6 @@ function loadTaxonCreator(parent) {
     document.getElementById("add-form-name")
         .placeholder = "Scientific name";
 
-    // TODO: Show other children of the parent to the side
-
     let submit_button = document.createElement("button");
     submit_button.classList.add("btn", "btn-success");
     submit_button.appendChild(document.createTextNode(`Add new ${TAXONOMY_ORDER[parent.level-1].toLowerCase()}`))
@@ -649,12 +647,13 @@ async function loadTaxon(taxon) {
     }
 
     // parts of the page for taxa that are not Aves
+    let parent;
     if (taxon.level !== TAXONOMY_ORDER.length-1) {
         // siblings of the taxon
         let siblings_div = document.createElement("div");
         col.appendChild(siblings_div);
 
-        let parent = await getTaxon(taxon.parent);
+        parent = await getTaxon(taxon.parent);
 
         let siblings_title = document.createElement("h4");
         siblings_title.classList.add("mt-3");
@@ -692,18 +691,110 @@ async function loadTaxon(taxon) {
 
     // buttons
     let buttons_div = document.createElement("div");
-    buttons_div.classList.add("d-flex", "flex-row", "mt-5", "pt-3", "border-top");
-    col.appendChild(buttons_div);
+    buttons_div.classList.add("d-flex", "flex-row", "mt-4", "pt-3", "border-top", "col-md-6", "mx-auto");
+    bod.appendChild(buttons_div);
 
     if (taxon.level !== TAXONOMY_ORDER.length-1) {
         buttons_div.appendChild(createDeleteButton(taxon, parent, "taxon"));
     }
+
+    let edit_button = createEditButton(() => {loadTaxon(taxon)});
+    buttons_div.appendChild(edit_button);
+
+    edit_button.addEventListener("click", async function () {
+        clearElement(col);
+
+        let form = document.createElement("form");
+        col.appendChild(form);
+
+        // name
+        let name_div = document.createElement("div");
+        name_div.classList.add("col-md-6", "mb-3")
+        form.appendChild(name_div);
+
+        let name_input = document.createElement("input");
+        name_input.classList.add("form-control");
+        name_input.name = "name";
+        name_input.id = "input-name";
+        name_input.value = taxon.name;
+
+        let name_label = document.createElement("h4");
+        name_label.classList.add("h4");
+        name_label.htmlFor = name_input.id;
+        name_label.appendChild(document.createTextNode("Name"));
+
+        name_div.append(name_label, name_input);
+
+        // description
+        let desc_div = document.createElement("div");
+        desc_div.classList.add("mb-3");
+        form.appendChild(desc_div);
+
+        let desc_input = document.createElement("textarea");
+        desc_input.classList.add("form-control");
+        desc_input.name = "description";
+        desc_input.id = "input-description";
+        desc_input.appendChild(document.createTextNode(taxon.description));
+
+        let desc_label = document.createElement("label");
+        desc_label.classList.add("h4");
+        desc_label.htmlFor = desc_input.id;
+        desc_label.appendChild(document.createTextNode("Description"))
+
+        desc_div.append(desc_label, desc_input);
+
+        if (taxon.level < TAXONOMY_ORDER.length-2) {
+            // parent
+            let parent_div = document.createElement("div");
+            parent_div.classList.add("col-md-6", "mb-3");
+            form.appendChild(parent_div);
+
+            let parent_input = document.createElement("select");
+            parent_input.classList.add("form-select");
+
+            let uncles;
+            try {
+                let response = await fetch(`get/level/${parent.level}`);
+                if (!response.ok) {
+                    uncles = [parent];
+                } else {
+                    uncles = await response.json();
+                }
+                console.log(uncles);
+            } catch (e) {
+                alert(e);
+                uncles = [parent];
+            }
+
+            for (const uncle of uncles) {
+                let option = document.createElement("option");
+
+                option.value = uncle.id;
+                option.appendChild(document.createTextNode(uncle.name));
+
+                if (uncle.id === parent.id) {
+                    option.selected = true;
+                }
+
+                parent_input.appendChild(option);
+            }
+
+            let parent_label = document.createElement("label");
+            parent_label.classList.add("h4");
+            parent_label.htmlFor = parent_input.id;
+            parent_label.appendChild(document.createTextNode(`${TAXONOMY_ORDER[parent.level]}`));
+
+            desc_div.append(parent_label, parent_input);
+        }
+
+        // todo have something happen when this submits
+    });
 }
 
 function createDeleteButton(entry, parent, type) {
     // delete button
     let delete_button = document.createElement("button");
-    delete_button.classList.add("btn", "btn-danger")
+    delete_button.classList.add("btn", "btn-danger", "me-3")
     delete_button.appendChild(document.createTextNode("Delete entry"));
 
     delete_button.addEventListener("click", () => {
@@ -729,6 +820,24 @@ function createDeleteButton(entry, parent, type) {
     });
 
     return delete_button;
+}
+
+function createEditButton(backFunction) {
+    let edit_button = document.createElement("button");
+    edit_button.classList.add("btn", "btn-secondary");
+    edit_button.appendChild(document.createTextNode("Edit entry"));
+
+    edit_button.addEventListener("click", () => {
+        // reset button
+        edit_button.firstChild.remove();
+        edit_button.appendChild(document.createTextNode("Cancel edit"));
+        edit_button.classList.remove("btn-secondary");
+        edit_button.classList.add("btn-outline-primary");
+
+        edit_button.addEventListener("click", backFunction);
+    });
+
+    return edit_button
 }
 
 async function createBreadcrumbDropdownInner (parent, container) {
@@ -786,7 +895,7 @@ async function getTaxon(id) {
 }
 
 async function getChildren(id) {
-    let response = await fetch(`get/levels/${id}`);
+    let response = await fetch(`get/children/${id}`);
 
     if (!response.ok) {
         throw new Error(`${response.status}: response failed`);
