@@ -11,7 +11,7 @@ const port = 8080;
     greater issue with source and copyright
  */
 
-// TODO add levels to taxa
+// TODO make these classes with unique id generators
 const TAXA_FILENAME = "./taxa.json";
 let taxa_data;
 try {
@@ -98,9 +98,11 @@ app.post("/add/species/", (req, res) => {
         return;
     }
 
+    // fixme genus validation
+
     try {
         let bird = {
-            "id": birds_data.length, // If you allow deletion, this will produce duplicates
+            "id": birds_data.length, // If you allow deletion, this will produce duplicates fixme
             "name": name,
             "species": species.toLowerCase(),
             "genus": genus,
@@ -139,6 +141,10 @@ app.post("/add/level/", (req, res) => {
         res.send("Data in request is invalid")
         return;
     }
+
+    let parentEntry = findByID(taxa_data, parent);
+
+    // fixme
 
     try {
         let taxon = {
@@ -241,6 +247,7 @@ app.get("/delete/:type/:id", (req, res) => {
                 if (id !== 0) {
                     let taxon = findByID(taxa_data, id);
 
+                    // If the entry doesn't exist simply do nothing (don't throw an error)
                     if (taxon) {
                         deleteTaxon(taxon); //fixme
                         writeTaxa();
@@ -255,6 +262,72 @@ app.get("/delete/:type/:id", (req, res) => {
 
             default:
                 // Premature break on error
+                console.log("/delete/: Error invalid entity type");
+
+                res.statusCode = 404; // todo handle 404s
+                res.contentType("text/plain");
+                res.send("Invalid entity type");
+                return;
+        }
+    } catch (e) {
+        res.statusCode = 400;
+        res.contentType("application/json");
+        res.send(JSON.stringify(e));
+    }
+
+    console.log(`/delete/${type}/: entry of id ${id} deleted`);
+
+    res.statusCode = 200;
+    res.send();
+});
+
+app.put("/edit/:type/", (req, res) => {
+    let {type} = req.params;
+
+    if (typeof type !== "string") {
+        res.statusCode = 406;
+        res.contentType("text/plain");
+        res.send("Error: Invalid parameters");
+    }
+
+    // fixme parent validation
+
+    try {
+        switch (type) {
+            case "taxon": {
+                // editable fields for taxon
+                const {name, parent, description} = req.body;
+
+                writeTaxa()
+                break;
+            }
+
+            case "bird": {
+                // editable fields for bird
+                const {name, species, genus, description, picture} = req.body;
+
+                let i = findIndexByID(birds_data, id);
+
+                if (isNaN(i)) {
+                    throw new Error("Error: queried entry does not exist");
+                }
+
+                if (name && typeof name === "string") {
+                    birds_data[i].name = name;
+                }
+                if (species && typeof species === "string") {
+                    birds_data[i].species = species;
+                }
+                if (genus && typeof genus === "number" && isNaN(findIndexByID(taxa_data, genus))) {
+
+                }
+
+                writeBirds()
+                break;
+            }
+
+            default:
+                // Premature break on error
                 console.log("/get/entity/: Error invalid entity type");
 
                 res.statusCode = 404; // todo handle 404s
@@ -263,14 +336,11 @@ app.get("/delete/:type/:id", (req, res) => {
                 return;
         }
     } catch (e) {
-        res.statusCode = 500;
+        res.statusCode = 400;
         res.contentType("application/json");
         res.send(JSON.stringify(e));
     }
-
-    res.statusCode = 200;
-    res.send();
-});
+})
 
 app.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}`)
@@ -291,12 +361,21 @@ function findByField(data, field, value) {
     return out;
 }
 
+function findIndexByID(data, id) {
+    for (let i=0; i<data.length; i++) {
+        if (data[i].id === id) {
+            return i;
+        }
+    }
+    return NaN;
+}
+
 function deleteByField(data, field, value) {
     // Due to size changing if multiple items are removed, uses a reconstruct approach
     // Maintains order of elements
+    // Acts out of place
     let out = [];
-    for (let i=0; i < data.length; i++) {
-        let d = data[i];
+    for (const d of data) {
         if (d[field] !== value) {
             out.push(d);
         }

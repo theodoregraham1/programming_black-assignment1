@@ -604,7 +604,6 @@ async function loadBird(bird) {
 
     // delete button
     buttons_div.appendChild(createDeleteButton(bird, genus, "bird"));
-
 }
 
 async function loadTaxon(taxon) {
