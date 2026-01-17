@@ -596,6 +596,15 @@ async function loadBird(bird) {
         document.createTextNode(" genus")
         );
     genus_div.appendChild(genus_button);
+
+    // buttons
+    let buttons_div = document.createElement("div");
+    buttons_div.classList.add("d-flex", "flex-row", "mt-5", "pt-3", "border-top");
+    col.appendChild(buttons_div);
+
+    // delete button
+    buttons_div.appendChild(createDeleteButton(bird, genus, "bird"));
+
 }
 
 async function loadTaxon(taxon) {
@@ -680,31 +689,47 @@ async function loadTaxon(taxon) {
             document.createTextNode(` ${TAXONOMY_ORDER[parent.level].toLowerCase()}`)
         );
         siblings_div.appendChild(parent_button);
+    }
 
-        // buttons
-        let buttons_div = document.createElement("div");
-        buttons_div.classList.add("d-flex", "flex-row", "mt-5", "pt-3", "border-top");
-        col.appendChild(buttons_div);
+    // buttons
+    let buttons_div = document.createElement("div");
+    buttons_div.classList.add("d-flex", "flex-row", "mt-5", "pt-3", "border-top");
+    col.appendChild(buttons_div);
 
-        // delete button
-        let delete_button = document.createElement("button");
-        delete_button.classList.add("btn", "btn-danger")
-        delete_button.appendChild(document.createTextNode("Delete entry"));
+    if (taxon.level !== TAXONOMY_ORDER.length-1) {
+        buttons_div.appendChild(createDeleteButton(taxon, parent, "taxon"));
+    }
+}
+
+function createDeleteButton(entry, parent, type) {
+    // delete button
+    let delete_button = document.createElement("button");
+    delete_button.classList.add("btn", "btn-danger")
+    delete_button.appendChild(document.createTextNode("Delete entry"));
+
+    delete_button.addEventListener("click", () => {
+        // Delete confirmation
+        delete_button.classList.remove("btn-danger");
+        delete_button.classList.add("btn-secondary");
+        delete_button.firstChild.remove();
+        delete_button.appendChild(document.createTextNode("Confirm deletion"));
 
         delete_button.addEventListener("click", () => {
-            delete_button.classList.remove("btn-danger");
-            delete_button.classList.add("btn-secondary");
-            delete_button.firstChild.remove();
-            delete_button.appendChild(document.createTextNode("Confirm deletion"));
+            fetch(`delete/${type}/${entry.id}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Error: deletion unsuccessful")
+                    } else {
+                        loadTaxon(parent);
+                    }
+                })
+                .catch((e) => {
+                    alert(e);
+                });
+        })
+    });
 
-            delete_button.addEventListener("click", () => {
-                fetch(`delete/taxon/${taxon.id}`)
-                    .catch((e) => alert(e));
-                loadTaxon(parent);
-            })
-        });
-        buttons_div.appendChild(delete_button);
-    }
+    return delete_button;
 }
 
 async function createBreadcrumbDropdownInner (parent, container) {

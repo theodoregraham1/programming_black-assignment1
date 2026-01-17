@@ -242,13 +242,14 @@ app.get("/delete/:type/:id", (req, res) => {
                     let taxon = findByID(taxa_data, id);
 
                     if (taxon) {
-                        deleteTaxon(taxon);
+                        deleteTaxon(taxon); //fixme
+                        writeTaxa();
                     }
                 }
                 break;
 
             case "bird":
-                deleteByField(birds_data, "id", id);
+                birds_data = deleteByField(birds_data, "id", id);
                 writeBirds()
                 break;
 
@@ -306,8 +307,10 @@ function deleteByField(data, field, value) {
 function deleteTaxon(taxon) {
     // delete a taxon and all its children recursively
     // base case when taxon is a genus
+    // this is editing a var so need to be very careful
+    // maybe change it to a class
     if (taxon.level === 1) {
-        deleteByField(birds_data, "genus", taxon.id);
+        taxa_data = deleteByField(birds_data, "genus", taxon.id);
 
     } else {
         for (const child of findByField(taxa_data, "parent", taxon.id)) {
@@ -315,7 +318,7 @@ function deleteTaxon(taxon) {
         }
     }
 
-    deleteByField(taxa_data, "id", taxon.id);
+    taxa_data = deleteByField(taxa_data, "id", taxon.id);
 }
 
 function capitalise(s) {
