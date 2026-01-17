@@ -10,32 +10,282 @@ const port = 8080;
     Images could be served locally, however I believe this falls out of scope for the project. It also leads to a
     greater issue with source and copyright
  */
+// birds_data and taxa_data are global variables. The program relies on the blocking loop to protect them from dangerous issues
 
-// TODO make these classes with unique id generators
-const TAXA_FILENAME = "./taxa.json";
-let taxa_data;
-try {
-    taxa_data = JSON.parse(fs.readFileSync(TAXA_FILENAME, "utf-8"));
-} catch (e) {
-    // If it does not exist, create it with just Aves in it
-    taxa_data = [{
-        id: 0,
-        name: "Aves",
-        description: "The class containing all birds",
-        parent: null,
-        level: 4
-    }]
-    fs.writeFileSync(TAXA_FILENAME, JSON.stringify(taxa_data))
+class EntityData {
+    // Super class for TaxaData and BirdData singleton classes
+    #data;
+    #map;
+    #file_name;
+    #nextId = 0
+
+    constructor(file_name, default_data, required_fields, optional_fields) {
+        this.#file_name = file_name;
+        this.required_fields = required_fields;
+        this.optional_fields = optional_fields;
+
+        try {
+            this.#data = JSON.parse(fs.readFileSync(file_name, "utf-8"));
+        } catch (e) {
+            this.#data = default_data;
+            this.#writeback();
+        }
+
+        this.#map = new Map();
+        for (const d of this.#data) {
+            this.#map.set(d.id, d);
+
+            if (d.id >= this.#nextId) {
+                this.#nextId = d.id+1;
+            }
+        }
+    }
+
+    size() {
+        return this.#data.length;
+    }
+
+    findByField(field, value) {
+        // Linear search with indistinct values
+        let out = [];
+        for (const d of this.#data) {
+            if (d[field] === value) {
+                out.push(d);
+            }
+        }
+        return out;
+    }
+
+    findById(id) {
+        return this.#map.get(id);
+    }
+
+    push(entity) {
+        entity.id = this.#generateId();
+        this.#data.push(entity);
+        this.#writeback();
+
+        this.#map.set(entity.id, entity);
+
+        return entity;
+    }
+
+    removeById(id) {
+        // Assume ids are unique
+        this.#map.delete(id);
+        this.#regenerateList();
+    }
+
+    removeByField(field, value) {
+        for (const entry of this.#map.entries()) {
+            if (entry.value[field] === value) {
+                this.#map.delete(entry.key);
+            }
+        }
+        this.#regenerateList();
+    }
+
+    edit(id, new_fields, editable_fields) {
+        // Does not validate anything
+        // Must be overloaded by children to be safe
+        // todo check this edits in place correctly
+        let entity = this.#map.get(id);
+
+        for (const field of editable_fields) {
+            if (field in new_fields) {
+                entity[field] = new_fields[field];
+            }
+        }
+
+        return entity;
+    }
+
+    getList() {
+        return this.#data;
+    }
+
+    isValid(entity) {
+        let i = 0;
+        for (const key in entity) {
+            if (key in this.required_fields) {
+                i++;
+            } else if (!key in this.optional_fields) {
+                return false;
+            }
+        }
+        return i === this.required_fields.length;
+    }
+
+    #generateId() {
+        const out = this.#nextId;
+        this.#nextId++;
+        return out;
+    }
+
+    #regenerateList() {
+        this.#data = [];
+        for (const v of this.#map.values()) {
+            this.#data.push(v);
+        }
+    }
+
+    #writeback() {
+        // Non-blocking write to file
+        fs.writeFile(
+            this.#file_name,
+            JSON.stringify(this.#data, null, 4),
+            (e)=> {if (e) {throw e;}}
+        );
+    }
+
 }
 
-const BIRDS_FILENAME = "./birds.json";
 let birds_data;
-try {
-    birds_data = JSON.parse(fs.readFileSync(BIRDS_FILENAME, "utf-8"));
-} catch (e) {
-    birds_data = [];
-    fs.writeFileSync(BIRDS_FILENAME, JSON.stringify(birds_data));
+let taxa_data;
+
+class BirdsData extends EntityData {
+    // Class chosen over an object for readability and reality-mimicking sake
+
+    // Singleton class
+    static #initialised = false;
+
+    constructor() {
+        // Enforce singleton
+        if (BirdsData.#initialised) {
+            throw new Error("Singleton class can only be initialised once");
+        } else {
+            BirdsData.#initialised = true;
+        }
+
+        super(
+            "./birds.json",
+            [],
+            ["name", "species", "genus", "description"],
+            ["picture"]
+        )
+    }
+
+    push(bird) {
+        // Assumes input data is of valid types
+        if (!this.isValid(bird)) {
+            throw new TypeError("Invalid entity pushed")
+        }
+
+        return super.push(bird);
+    }
+
+    edit(id, new_fields) {
+        let editable_fields = ["name", "species", "description", "picture"];
+
+        if ("genus" in new_fields) {
+            if (this.#isValidGenus(new_fields.genus)) {
+                editable_fields.push("genus")
+            } else {
+                throw new TypeError("Invalid taxon to set as parent");
+            }
+        }
+        return super.edit(id, new_fields, editable_fields);
+    }
+
+    isValid(bird) {
+        if (!super.isValid(bird)) {
+            return false;
+        }
+
+        return this.#isValidGenus(bird.genus)
+    }
+
+    #isValidGenus(genus_id) {
+        const parent = taxa_data.findById(genus_id);
+
+        return parent && (parent.level === 1);
+    }
 }
+birds_data = new BirdsData();
+
+class TaxaData extends EntityData {
+    // Singleton class
+    static #initialised = false;
+
+    // Class chosen over an object for readability and reality-mimicking sake
+    constructor() {
+        // Enforce singleton
+        if (TaxaData.#initialised) {
+            throw new Error("Singleton class can only be initialised once");
+        } else {
+            TaxaData.#initialised = true;
+        }
+
+        super(
+            "./taxa.json",
+            [{
+                id: 0,
+                name: "Aves",
+                description: "The class containing all birds.",
+                parent: null,
+                level: 4
+            }],
+            ["name", "parent", "description", "level"],
+            []
+        );
+    }
+
+    push(taxon) {
+        if (this.isValid(taxon)) {
+            throw new Error("Invalid entity pushed")
+        }
+
+        return super.push(taxon);
+    }
+
+    edit(id, new_fields) {
+        let allowed_fields = ["name", "description"];
+        const taxon = this.findById(id);
+
+        if ("parent" in new_fields) {
+            if (this.#isValidParent(taxon, new_fields.parent)) {
+                allowed_fields.push("parent");
+            }
+        }
+
+        super.edit(id, new_fields, allowed_fields);
+    }
+
+    removeById(id) {
+        this.#removeTaxon(this.findById(id));
+    }
+
+    #removeTaxon(taxon) {
+        if (taxon.id === 0) {
+            throw new Error("Cannot delete Aves");
+        }
+
+        if (taxon.level === 1) {
+            birds_data.removeByField("genus", taxon.id);
+        } else {
+            for (const child of this.findByField("parent", taxon)) {
+                // Recursive call down the taxonomy tree to remove children
+                this.#removeTaxon(child);
+            }
+        }
+        super.removeById(taxon.id);
+    }
+
+    isValid(taxon) {
+        if (!super.isValid(taxon)) {
+            return false;
+        }
+
+        return this.#isValidParent(taxon, taxon.parent);
+    }
+
+    #isValidParent(taxon, parent_id) {
+        const parent = this.findById(parent_id);
+        return !parent || (parent.level - taxon.level !== 1)
+    }
+}
+taxa_data = new TaxaData();
+
 
 const app = express();
 
@@ -57,19 +307,19 @@ app.get("/index/cards/:n", (req, res) => {
         return;
     }
 
-    if (n >= birds_data.length) {
+    if (n >= birds_data.size()) {
         res.statusCode = 200;
         res.contentType("application/json");
-        res.send(JSON.stringify(birds_data));
+        res.send(JSON.stringify(birds_data.getList()));
         return;
     }
 
     let birds = []
     for (let i=0; i<n; i++) {
-        let id = Math.floor(Math.random() * birds_data.length);
+        let i = Math.floor(Math.random() * birds.size());
 
-        let bird = findByID(birds_data, id);
-        if (!bird || findByID(birds, id)) {
+        let bird = birds_data.getList()[i];
+        if (!bird || bird in birds) { // todo check this
             i--;
         } else {
             birds.push(bird);
@@ -98,20 +348,15 @@ app.post("/add/species/", (req, res) => {
         return;
     }
 
-    // fixme genus validation
-
     try {
         let bird = {
-            "id": birds_data.length, // If you allow deletion, this will produce duplicates fixme
             "name": name,
             "species": species.toLowerCase(),
             "genus": genus,
             "picture": picture,
             "description": description
         };
-        birds_data.push(bird);
-
-        writeBirds();
+        bird = birds_data.push(bird);
 
         console.log("/add/species/: New bird successfully written to file")
 
@@ -123,8 +368,8 @@ app.post("/add/species/", (req, res) => {
         console.log("/add/species:", e);
 
         res.statusCode = 500;
-        res.contentType("text/plain");
-        res.send("Error in writing new entry to file");
+        res.contentType("application/json");
+        res.send(JSON.stringify(e));
     }
 });
 
@@ -142,13 +387,8 @@ app.post("/add/level/", (req, res) => {
         return;
     }
 
-    let parentEntry = findByID(taxa_data, parent);
-
-    // fixme
-
     try {
         let taxon = {
-            "id": taxa_data.length,
             "name": capitalise(name),
             "description": description,
             "parent": parent,
@@ -157,17 +397,16 @@ app.post("/add/level/", (req, res) => {
 
         taxa_data.push(taxon);
 
-        writeTaxa();
-
         console.log("/add/level/: New taxon successfully written to file")
 
         res.statusCode = 200;
         res.contentType("application/json");
         res.send(taxon);
+
     } catch (e) {
         res.statusCode = 500;
-        res.contentType("text/plain");
-        res.send("Error in writing new entry to file");
+        res.contentType("application/json");
+        res.send(JSON.stringify(e));
     }
 });
 
@@ -184,11 +423,11 @@ app.get("/get/entity/:type/:id", (req, res) => {
     let data;
     switch (type) {
         case "taxon":
-            data = findByID(taxa_data, id);
+            data = taxa_data.findById(id);
             break;
 
         case "bird":
-            data = findByID(birds_data, id);
+            data = birds_data.findById(id);
             break;
         default:
             // Premature break on error
@@ -201,28 +440,42 @@ app.get("/get/entity/:type/:id", (req, res) => {
     }
 
     console.log(`/get/entity/: ${type} number ${id} queried`)
-
-    res.statusCode = 200;
-    res.contentType("application/json");
-    res.send(JSON.stringify(data));
+    if (data) {
+        res.statusCode = 200;
+        res.contentType("application/json");
+        res.send(JSON.stringify(data));
+    } else {
+        res.statusCode = 400;
+        res.contentType("text/plain");
+        res.send("Entity does not exist");
+    }
 });
 
 app.get("/get/levels/:parent", (req, res) => {
     let {parent} = req.params;
 
-    parent = parseInt(parent, 10);
+    parent = parseInt(parent);
 
     if (isNaN(parent)) {
         res.statusCode = 406;
         res.contentType("text/plain");
         res.send("Error: parameter must be a number");
+        return;
+    }
+    let taxon = taxa_data.findById(parent);
+
+    if (!taxon) {
+        res.statusCode = 400;
+        res.contentType("text/plain");
+        res.send("Entity does not exist");
     }
 
-    let children = findByField(taxa_data, "parent", parent);
-    if (children.length === 0) {
-        children = findByField(birds_data, "genus", parent);
+    let children;
+    if (taxon.level !== 1) {
+        children = taxa_data.findByField("parent", parent);
+    } else {
+        children = birds_data.findByField("genus", parent);
     }
-    console.log(children);
     console.log(`/get/levels/: Children of ${parent} queried`)
 
     res.statusCode = 200;
@@ -245,92 +498,67 @@ app.get("/delete/:type/:id", (req, res) => {
             case "taxon":
                 // don't allow Aves to be deleted
                 if (id !== 0) {
-                    let taxon = findByID(taxa_data, id);
+                    let taxon = taxa_data.findById(id);
 
                     // If the entry doesn't exist simply do nothing (don't throw an error)
                     if (taxon) {
-                        deleteTaxon(taxon); //fixme
-                        writeTaxa();
+                        taxa_data.removeById(taxon.id);
                     }
                 }
                 break;
 
             case "bird":
-                birds_data = deleteByField(birds_data, "id", id);
-                writeBirds()
+                birds_data.removeById(id);
                 break;
 
             default:
                 // Premature break on error
                 console.log("/delete/: Error invalid entity type");
 
-                res.statusCode = 404; // todo handle 404s
+                res.statusCode = 400;
                 res.contentType("text/plain");
                 res.send("Invalid entity type");
                 return;
         }
+
+        console.log(`/delete/${type}/: entry of id ${id} deleted`);
+
+        res.statusCode = 200;
+        res.send();
     } catch (e) {
         res.statusCode = 400;
         res.contentType("application/json");
         res.send(JSON.stringify(e));
     }
-
-    console.log(`/delete/${type}/: entry of id ${id} deleted`);
-
-    res.statusCode = 200;
-    res.send();
 });
 
 app.put("/edit/:type/", (req, res) => {
     let {type} = req.params;
+    let {id} = req.body;
 
-    if (typeof type !== "string") {
+    if (typeof type !== "string" || typeof id !== "number") {
         res.statusCode = 406;
         res.contentType("text/plain");
         res.send("Error: Invalid parameters");
     }
 
-    // fixme parent validation
-
     try {
         switch (type) {
             case "taxon": {
-                // editable fields for taxon
-                const {name, parent, description} = req.body;
-
-                writeTaxa()
+                taxa_data.edit(id, req.body)
                 break;
             }
 
             case "bird": {
-                // editable fields for bird
-                const {name, species, genus, description, picture} = req.body;
-
-                let i = findIndexByID(birds_data, id);
-
-                if (isNaN(i)) {
-                    throw new Error("Error: queried entry does not exist");
-                }
-
-                if (name && typeof name === "string") {
-                    birds_data[i].name = name;
-                }
-                if (species && typeof species === "string") {
-                    birds_data[i].species = species;
-                }
-                if (genus && typeof genus === "number" && isNaN(findIndexByID(taxa_data, genus))) {
-
-                }
-
-                writeBirds()
+                birds_data.edit(id, req.body)
                 break;
             }
 
             default:
                 // Premature break on error
-                console.log("/get/entity/: Error invalid entity type");
+                console.log("/get/entity/: Error, invalid entity type");
 
-                res.statusCode = 404; // todo handle 404s
+                res.statusCode = 400;
                 res.contentType("text/plain");
                 res.send("Invalid entity type");
                 return;
@@ -340,89 +568,12 @@ app.put("/edit/:type/", (req, res) => {
         res.contentType("application/json");
         res.send(JSON.stringify(e));
     }
-})
+});
 
 app.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}`)
 });
 
-function findByID(data, id) {
-    return findByField(data, "id", id)[0];
-}
-
-function findByField(data, field, value) {
-    // Linear search with indistinct values
-    let out = [];
-    for (const d of data) {
-        if (d[field] === value) {
-            out.push(d);
-        }
-    }
-    return out;
-}
-
-function findIndexByID(data, id) {
-    for (let i=0; i<data.length; i++) {
-        if (data[i].id === id) {
-            return i;
-        }
-    }
-    return NaN;
-}
-
-function deleteByField(data, field, value) {
-    // Due to size changing if multiple items are removed, uses a reconstruct approach
-    // Maintains order of elements
-    // Acts out of place
-    let out = [];
-    for (const d of data) {
-        if (d[field] !== value) {
-            out.push(d);
-        }
-    }
-    return out;
-}
-
-function deleteTaxon(taxon) {
-    // delete a taxon and all its children recursively
-    // base case when taxon is a genus
-    // this is editing a var so need to be very careful
-    // maybe change it to a class
-    if (taxon.level === 1) {
-        taxa_data = deleteByField(birds_data, "genus", taxon.id);
-
-    } else {
-        for (const child of findByField(taxa_data, "parent", taxon.id)) {
-            deleteTaxon(child);
-        }
-    }
-
-    taxa_data = deleteByField(taxa_data, "id", taxon.id);
-}
-
 function capitalise(s) {
     return s.charAt(0).toUpperCase() + s.slice(1, s.size).toLowerCase()
-}
-
-function writeFileErrorThrower(e) {
-    if (e) {
-        throw e;
-    }
-}
-
-function writeBirds() {
-    // Non-blocking write to file
-    fs.writeFile(
-        BIRDS_FILENAME,
-        JSON.stringify(birds_data, null, 4),
-        writeFileErrorThrower
-    );
-}
-
-function writeTaxa() {
-    fs.writeFile(
-        TAXA_FILENAME,
-        JSON.stringify(taxa_data, null, 4),
-        writeFileErrorThrower
-    );
 }
