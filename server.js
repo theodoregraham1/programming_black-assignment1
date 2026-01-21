@@ -181,7 +181,7 @@ class BirdsData extends EntityData {
             if (this.#isValidGenus(new_fields.genus)) {
                 editable_fields.push("genus")
             } else {
-                throw new TypeError("Invalid taxon to set as parent");
+                throw new TypeError("Invalid taxon to set as father");
             }
         }
         return super.edit(id, new_fields, editable_fields);
@@ -196,9 +196,9 @@ class BirdsData extends EntityData {
     }
 
     #isValidGenus(genus_id) {
-        const parent = taxa_data.findById(genus_id);
+        const father = taxa_data.findById(genus_id);
 
-        return parent && (parent.level === 1);
+        return father && (father.level === 1);
     }
 }
 birds_data = new BirdsData();
@@ -222,10 +222,10 @@ class TaxaData extends EntityData {
                 id: 0,
                 name: "Aves",
                 description: "The class containing all birds.",
-                parent: null,
+                father: null,
                 level: 4
             }],
-            ["name", "parent", "description", "level"],
+            ["name", "father", "description", "level"],
             []
         );
     }
@@ -242,9 +242,9 @@ class TaxaData extends EntityData {
         let allowed_fields = ["name", "description"];
         const taxon = this.findById(id);
 
-        if ("parent" in new_fields) {
-            if (this.#isValidParent(taxon, new_fields.parent)) {
-                allowed_fields.push("parent");
+        if ("father" in new_fields) {
+            if (this.#isValidParent(taxon, new_fields.father)) {
+                allowed_fields.push("father");
             }
         }
 
@@ -263,7 +263,7 @@ class TaxaData extends EntityData {
         if (taxon.level === 1) {
             birds_data.removeByField("genus", taxon.id);
         } else {
-            for (const child of this.findByField("parent", taxon)) {
+            for (const child of this.findByField("father", taxon)) {
                 // Recursive call down the taxonomy tree to remove children
                 this.#removeTaxon(child);
             }
@@ -276,12 +276,12 @@ class TaxaData extends EntityData {
             return false;
         }
 
-        return this.#isValidParent(taxon, taxon.parent);
+        return this.#isValidParent(taxon, taxon.father);
     }
 
     #isValidParent(taxon, parent_id) {
-        const parent = this.findById(parent_id);
-        return !parent || (parent.level - taxon.level !== 1)
+        const father = this.findById(parent_id);
+        return !father || (father.level - taxon.level !== 1)
     }
 }
 taxa_data = new TaxaData();
@@ -374,11 +374,11 @@ app.post("/add/species/", (req, res) => {
 });
 
 app.post("/add/level/", (req, res) => {
-    // Data per level: parent, name, description, id
-    let {parent, name, description, level} = req.body;
+    // Data per level: father, name, description, id
+    let {father, name, description, level} = req.body;
 
     if (
-        typeof name !== "string" || typeof parent !== "number"
+        typeof name !== "string" || typeof father !== "number"
         || typeof description !== "string" || typeof level !== "number"
     ) {
         res.statusCode = 406;
@@ -391,7 +391,7 @@ app.post("/add/level/", (req, res) => {
         let taxon = {
             "name": capitalise(name),
             "description": description,
-            "parent": parent,
+            "father": father,
             "level": level
         };
 
@@ -451,18 +451,18 @@ app.get("/get/entity/:type/:id", (req, res) => {
     }
 });
 
-app.get("/get/children/:parent", (req, res) => {
-    let {parent} = req.params;
+app.get("/get/children/:father", (req, res) => {
+    let {father} = req.params;
 
-    parent = parseInt(parent);
+    father = parseInt(father);
 
-    if (isNaN(parent)) {
+    if (isNaN(father)) {
         res.statusCode = 406;
         res.contentType("text/plain");
         res.send("Error: parameter must be a number");
         return;
     }
-    let taxon = taxa_data.findById(parent);
+    let taxon = taxa_data.findById(father);
 
     if (!taxon) {
         res.statusCode = 400;
@@ -472,11 +472,11 @@ app.get("/get/children/:parent", (req, res) => {
 
     let children;
     if (taxon.level !== 1) {
-        children = taxa_data.findByField("parent", parent);
+        children = taxa_data.findByField("father", father);
     } else {
-        children = birds_data.findByField("genus", parent);
+        children = birds_data.findByField("genus", father);
     }
-    console.log(`/get/children/: Children of ${parent} queried`)
+    console.log(`/get/children/: Children of ${father} queried`)
 
     res.statusCode = 200;
     res.contentType("application/json");

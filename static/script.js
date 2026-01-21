@@ -121,11 +121,11 @@ function loadBrowse () {
     createBrowseLevel(CLASS, "0");
 }
 
-async function createBrowseLevel (parent, parent_level_id) {
+async function createBrowseLevel (father, parent_level_id) {
     let level_list = document.createElement("div");
     level_list.classList.add("accordion","accordion-flush", "border",);
 
-    if (parent.level !== TAXONOMY_ORDER.length-1) {
+    if (father.level !== TAXONOMY_ORDER.length-1) {
         level_list.classList.add("border-bottom-0", "border-right-0")
     }
 
@@ -139,9 +139,9 @@ async function createBrowseLevel (parent, parent_level_id) {
 
     level_list.id = `${parent_level_id}-list`;
 
-    let new_level = parent.level-1;
+    let new_level = father.level-1;
     try {
-        let children = await getChildren(parent.id);
+        let children = await getChildren(father.id);
 
         for (const child of children) {
             let {id, name} = child;
@@ -178,7 +178,7 @@ async function createBrowseLevel (parent, parent_level_id) {
                 let {species} = child;
 
                 p.appendChild(document.createTextNode(`${name} - (`));
-                p.appendChild(getItalicSpan(`${parent.name} ${species}`));
+                p.appendChild(getItalicSpan(`${father.name} ${species}`));
                 p.appendChild(document.createTextNode(")"));
 
                 btn.addEventListener("click", () => loadBird(child));
@@ -216,7 +216,7 @@ function createAccordionItem (item_id, item, parent_id) {
     let acc_collapse = document.createElement("div");
     acc_collapse.id = item_id;
     acc_collapse.classList.add("accordion-collapse", "collapse");
-    acc_collapse.setAttribute("data-bs-parent", `#${parent_id}`);
+    acc_collapse.setAttribute("data-bs-father", `#${parent_id}`);
 
     let acc_body = document.createElement("div");
     acc_body.classList.add("accordion-body", "pb-0", "pe-0", "border-bottom", "border-3");
@@ -423,21 +423,21 @@ function loadBirdCreator(genus) {
 
 }
 
-function loadTaxonCreator(parent) {
+function loadTaxonCreator(father) {
     // Load creator for a new taxon
     let form = loadGeneralCreator();
     let inputs_div = document.getElementById("add-form-inputs");
     inputs_div.classList.add("mx-auto");
 
     document.getElementById("add-form-description")
-        .placeholder = `Description of ${TAXONOMY_ORDER[parent.level-1].toLowerCase()}`;
+        .placeholder = `Description of ${TAXONOMY_ORDER[father.level-1].toLowerCase()}`;
 
     document.getElementById("add-form-name")
         .placeholder = "Scientific name";
 
     let submit_button = document.createElement("button");
     submit_button.classList.add("btn", "btn-success");
-    submit_button.appendChild(document.createTextNode(`Add new ${TAXONOMY_ORDER[parent.level-1].toLowerCase()}`))
+    submit_button.appendChild(document.createTextNode(`Add new ${TAXONOMY_ORDER[father.level-1].toLowerCase()}`))
     inputs_div.appendChild(submit_button);
 
     // Submitter for form
@@ -447,8 +447,8 @@ function loadTaxonCreator(parent) {
         try {
             let data = new FormData(form);
             data = Object.fromEntries(data.entries());
-            data.parent = parent.id;
-            data.level = parent.level-1;
+            data.father = father.id;
+            data.level = father.level-1;
 
             let response = await fetch("add/level/", {
                 method: "POST",
@@ -647,29 +647,29 @@ async function loadTaxon(taxon) {
     }
 
     // parts of the page for taxa that are not Aves
-    let parent;
+    let father;
     if (taxon.level !== TAXONOMY_ORDER.length-1) {
         // siblings of the taxon
         let siblings_div = document.createElement("div");
         col.appendChild(siblings_div);
 
-        parent = await getTaxon(taxon.parent);
+        father = await getTaxon(taxon.father);
 
         let siblings_title = document.createElement("h4");
         siblings_title.classList.add("mt-3");
         siblings_title.append(
             document.createTextNode(`Other ${TAXONOMY_ORDER_PLURALS[taxon.level].toLowerCase()} in the `),
-            getItalicSpan(parent.name),
-            document.createTextNode(` ${TAXONOMY_ORDER[parent.level].toLowerCase()}:`)
+            getItalicSpan(father.name),
+            document.createTextNode(` ${TAXONOMY_ORDER[father.level].toLowerCase()}:`)
         );
         siblings_div.appendChild(siblings_title);
 
         try {
-            let siblings = await getChildren(parent.id);
+            let siblings = await getChildren(father.id);
 
-            createListGroup(parent, siblings, siblings_div);
+            createListGroup(father, siblings, siblings_div);
 
-            let selected = document.getElementById(`list-group-${parent.id}-item-${taxon.id}`);
+            let selected = document.getElementById(`list-group-${father.id}-item-${taxon.id}`);
             selected.classList.add("active");
             selected.ariaCurrent = "true";
         } catch (e) {
@@ -679,12 +679,12 @@ async function loadTaxon(taxon) {
         let parent_button = document.createElement("button");
         parent_button.classList.add("btn", "btn-outline-secondary");
         parent_button.addEventListener("click", () => {
-            loadTaxon(parent);
+            loadTaxon(father);
         });
         parent_button.append(
             document.createTextNode("View "),
-            getItalicSpan(parent.name),
-            document.createTextNode(` ${TAXONOMY_ORDER[parent.level].toLowerCase()}`)
+            getItalicSpan(father.name),
+            document.createTextNode(` ${TAXONOMY_ORDER[father.level].toLowerCase()}`)
         );
         siblings_div.appendChild(parent_button);
     }
@@ -695,17 +695,20 @@ async function loadTaxon(taxon) {
     bod.appendChild(buttons_div);
 
     if (taxon.level !== TAXONOMY_ORDER.length-1) {
-        buttons_div.appendChild(createDeleteButton(taxon, parent, "taxon"));
+        buttons_div.appendChild(createDeleteButton(taxon, father, "taxon"));
     }
 
     let edit_button = createEditButton(() => {loadTaxon(taxon)});
     buttons_div.appendChild(edit_button);
 
-    edit_button.addEventListener("click", async function () {
-        clearElement(col);
+    edit_button.addEventListener("click", () => {loadTaxonEdit(col, buttons_div, taxon, father)});
+}
+
+async function loadTaxonEdit(container, buttons_div, taxon, father) {
+        clearElement(container);
 
         let form = document.createElement("form");
-        col.appendChild(form);
+        container.appendChild(form);
 
         // name
         let name_div = document.createElement("div");
@@ -744,26 +747,26 @@ async function loadTaxon(taxon) {
         desc_div.append(desc_label, desc_input);
 
         if (taxon.level < TAXONOMY_ORDER.length-2) {
-            // parent
+            // father
             let parent_div = document.createElement("div");
             parent_div.classList.add("col-md-6", "my-3");
             form.appendChild(parent_div);
 
             let parent_input = document.createElement("select");
             parent_input.classList.add("form-select");
-            parent_input.name = "parent";
+            parent_input.name = "father";
 
             let uncles;
             try {
-                let response = await fetch(`get/level/${parent.level}`);
+                let response = await fetch(`get/level/${father.level}`);
                 if (!response.ok) {
-                    uncles = [parent];
+                    uncles = [father];
                 } else {
                     uncles = await response.json();
                 }
             } catch (e) {
                 alert(e);
-                uncles = [parent];
+                uncles = [father];
             }
 
             for (const uncle of uncles) {
@@ -772,7 +775,7 @@ async function loadTaxon(taxon) {
                 option.value = uncle.id;
                 option.appendChild(document.createTextNode(uncle.name));
 
-                if (uncle.id === parent.id) {
+                if (uncle.id === father.id) {
                     option.selected = true;
                 }
 
@@ -782,7 +785,7 @@ async function loadTaxon(taxon) {
             let parent_label = document.createElement("label");
             parent_label.classList.add("h4");
             parent_label.htmlFor = parent_input.id;
-            parent_label.appendChild(document.createTextNode(`${TAXONOMY_ORDER[parent.level]}`));
+            parent_label.appendChild(document.createTextNode(`${TAXONOMY_ORDER[father.level]}`));
 
             desc_div.append(parent_label, parent_input);
         }
@@ -798,7 +801,7 @@ async function loadTaxon(taxon) {
                 data = Object.fromEntries(data.entries());
 
                 data.id = taxon.id;
-                data.parent = parseInt(data.parent);
+                data.father = parseInt(data.father);
 
                 let response = await fetch("/edit/taxon", {
                     method: "PUT",
@@ -823,10 +826,9 @@ async function loadTaxon(taxon) {
         form.addEventListener("submit", function (event) {
             event.preventDefault();
         });
-    });
 }
 
-function createDeleteButton(entry, parent, type) {
+function createDeleteButton(entry, father, type) {
     // delete button
     let delete_button = document.createElement("button");
     delete_button.classList.add("btn", "btn-danger", "me-3")
@@ -845,7 +847,7 @@ function createDeleteButton(entry, parent, type) {
                     if (!response.ok) {
                         throw new Error("Error: deletion unsuccessful")
                     } else {
-                        loadTaxon(parent);
+                        loadTaxon(father);
                     }
                 })
                 .catch((e) => {
@@ -875,7 +877,7 @@ function createEditButton(backFunction) {
     return edit_button
 }
 
-async function createBreadcrumbDropdownInner (parent, container) {
+async function createBreadcrumbDropdownInner (father, container) {
     clearElement(container);
 
     let btn = document.createElement("span");
@@ -883,7 +885,7 @@ async function createBreadcrumbDropdownInner (parent, container) {
     btn.ariaExpanded = "false";
     btn.type = "button";
     btn.setAttribute("data-bs-toggle", "dropdown");
-    btn.appendChild(document.createTextNode("Select " + TAXONOMY_ORDER[parent.level-1]));
+    btn.appendChild(document.createTextNode("Select " + TAXONOMY_ORDER[father.level-1]));
     container.appendChild(btn);
 
     let options = document.createElement("ul");
@@ -891,16 +893,18 @@ async function createBreadcrumbDropdownInner (parent, container) {
     container.appendChild(options);
 
     try {
-        let choices = await getChildren(parent.id);
+        let choices = await getChildren(father.id);
 
         for (let i = 0; i < choices.length; i++) {
             let li = document.createElement("li");
-            li.id = `breadcrumb-dropdown-option-${parent.level-1}-${i}`
+            li.id = `breadcrumb-dropdown-option-${father.level-1}-${i}`
             li.className = "dropdown-item";
             li.appendChild(document.createTextNode(choices[i].name));
             options.appendChild(li)
 
-            li.addEventListener("click", () => updateBreadcrumb(choices[i], container));
+            li.addEventListener("click", () => {
+                updateBreadcrumb(choices[i], container)
+            });
         }
     } catch (e) {
         alert(e);
@@ -908,13 +912,13 @@ async function createBreadcrumbDropdownInner (parent, container) {
     }
 
     let new_li = document.createElement("li");
-    new_li.id = `breadcrumb-dropdown-${parent.level-1}-new`
+    new_li.id = `breadcrumb-dropdown-${father.level-1}-new`
     new_li.className = "dropdown-item";
-    new_li.appendChild(document.createTextNode(`Create new ${TAXONOMY_ORDER[parent.level-1]}`));
+    new_li.appendChild(document.createTextNode(`Create new ${TAXONOMY_ORDER[father.level-1]}`));
     options.appendChild(new_li)
 
     new_li.addEventListener("click", () => {
-        loadTaxonCreator(parent);
+        loadTaxonCreator(father);
         container.hidden = true;
     })
 }
@@ -939,7 +943,7 @@ async function getChildren(id) {
     return await response.json();
 }
 
-function createListGroup(parent, children, container) {
+function createListGroup(father, children, container) {
         if (children.length !== 0) {
             let list_div = document.createElement("div");
             list_div.classList.add("list-group", "ms-2", "mb-3", "col-md-6");
@@ -949,11 +953,11 @@ function createListGroup(parent, children, container) {
                 let a = document.createElement("a");
                 a.classList.add("list-group-item", "list-group-item-action");
                 a.href = "#";
-                a.id = `list-group-${parent.id}-item-${child.id}`;
+                a.id = `list-group-${father.id}-item-${child.id}`;
                 list_div.appendChild(a);
 
-                if (parent.level === 1) {
-                    a.appendChild(createBothNamesTitle(child, parent));
+                if (father.level === 1) {
+                    a.appendChild(createBothNamesTitle(child, father));
                     a.addEventListener("click", () => {
                         loadBird(child);
                     });
@@ -971,7 +975,7 @@ function createListGroup(parent, children, container) {
         } else {
             let p = document.createElement("p");
             p.appendChild(document.createTextNode(
-                `There are no entries in this ${TAXONOMY_ORDER[parent.level].toLowerCase()}`
+                `There are no entries in this ${TAXONOMY_ORDER[father.level].toLowerCase()}`
             ));
             container.appendChild(p);
         }
