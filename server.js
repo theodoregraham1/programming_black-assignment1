@@ -88,7 +88,6 @@ class EntityData {
     edit(id, new_fields, editable_fields) {
         // Does not validate anything
         // Must be overloaded by children to be safe
-        // todo check this edits in place correctly
         let entity = this.#map.get(id);
 
         for (const field of editable_fields) {
@@ -97,6 +96,7 @@ class EntityData {
             }
         }
 
+        this.#writeback();
         return entity;
     }
 
@@ -587,6 +587,10 @@ app.put("/edit/:type/", (req, res) => {
         res.contentType("application/json");
         res.send(JSON.stringify(e));
     }
+
+    res.statusCode = 200;
+    res.contentType("application/json");
+    res.send(JSON.stringify(taxa_data.findById(id)));
 });
 
 app.listen(port, hostname, () => {

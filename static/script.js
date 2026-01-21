@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     document.getElementById("nav-browse-btn").addEventListener("click", loadBrowse);
     document.getElementById("nav-add-btn").addEventListener("click", loadAdd);
 
-    loadIndex();
+    await loadIndex();
 })
 
 async function loadIndex() {
@@ -746,11 +746,12 @@ async function loadTaxon(taxon) {
         if (taxon.level < TAXONOMY_ORDER.length-2) {
             // parent
             let parent_div = document.createElement("div");
-            parent_div.classList.add("col-md-6", "mb-3");
+            parent_div.classList.add("col-md-6", "my-3");
             form.appendChild(parent_div);
 
             let parent_input = document.createElement("select");
             parent_input.classList.add("form-select");
+            parent_input.name = "parent";
 
             let uncles;
             try {
@@ -760,7 +761,6 @@ async function loadTaxon(taxon) {
                 } else {
                     uncles = await response.json();
                 }
-                console.log(uncles);
             } catch (e) {
                 alert(e);
                 uncles = [parent];
@@ -787,7 +787,42 @@ async function loadTaxon(taxon) {
             desc_div.append(parent_label, parent_input);
         }
 
-        // todo have something happen when this submits
+        let submit_button = document.createElement("button");
+        submit_button.classList.add("btn", "btn-outline-success");
+        submit_button.appendChild(document.createTextNode("Submit edit"))
+        buttons_div.appendChild(submit_button);
+
+        submit_button.addEventListener("click", async function () {
+            try {
+                let data = new FormData(form);
+                data = Object.fromEntries(data.entries());
+
+                data.id = taxon.id;
+                data.parent = parseInt(data.parent);
+
+                let response = await fetch("/edit/taxon", {
+                    method: "PUT",
+                    headers: {
+                        "content-type": "application/json"
+                    },
+                    body: JSON.stringify(data),
+                });
+                if (response.ok) {
+                    let content = await response.json();
+
+                    await loadTaxon(content);
+                } else {
+                    alert("Error: Problem in request, please try again later");
+                    loadTaxon(taxon);
+                }
+            } catch (e) {
+                alert(e);
+            }
+        });
+
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+        });
     });
 }
 
@@ -824,7 +859,7 @@ function createDeleteButton(entry, parent, type) {
 
 function createEditButton(backFunction) {
     let edit_button = document.createElement("button");
-    edit_button.classList.add("btn", "btn-secondary");
+    edit_button.classList.add("btn", "btn-secondary", "me-3");
     edit_button.appendChild(document.createTextNode("Edit entry"));
 
     edit_button.addEventListener("click", () => {
