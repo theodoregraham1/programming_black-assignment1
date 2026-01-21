@@ -418,6 +418,7 @@ app.get("/get/entity/:type/:id", (req, res) => {
         res.statusCode = 406;
         res.contentType("text/plain");
         res.send("Error: Invalid parameters");
+        return;
     }
 
     let data;
@@ -468,6 +469,7 @@ app.get("/get/children/:father", (req, res) => {
         res.statusCode = 400;
         res.contentType("text/plain");
         res.send("Entity does not exist");
+        return;
     }
 
     let children;
@@ -495,7 +497,7 @@ app.get("/get/level/:level", (req, res) => {
         return;
     }
 
-    console.log(`get/level/: level ${level} queried`);
+    console.log(`/get/level/: level ${level} queried`);
 
     res.statusCode = 200;
     res.contentType("application/json")
@@ -562,14 +564,19 @@ app.put("/edit/:type/", (req, res) => {
     }
 
     try {
+        res.statusCode = 200;
+        res.contentType("application/json");
+
         switch (type) {
             case "taxon": {
                 taxa_data.edit(id, req.body)
+                res.send(taxa_data.findById(id));
                 break;
             }
 
             case "bird": {
                 birds_data.edit(id, req.body)
+                res.send(JSON.stringify(birds_data.findById(id)));
                 break;
             }
 
@@ -583,14 +590,12 @@ app.put("/edit/:type/", (req, res) => {
                 return;
         }
     } catch (e) {
+        console.log(e);
+
         res.statusCode = 400;
         res.contentType("application/json");
         res.send(JSON.stringify(e));
     }
-
-    res.statusCode = 200;
-    res.contentType("application/json");
-    res.send(JSON.stringify(taxa_data.findById(id)));
 });
 
 app.listen(port, hostname, () => {

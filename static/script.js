@@ -51,7 +51,6 @@ function makeCard(data) {
     card.appendChild(img_div)
 
     let img = document.createElement("img");
-    img.alt = "..."; // todo
     img.className = "card-img-top";
     img_div.appendChild(img);
 
@@ -77,6 +76,7 @@ function makeCard(data) {
 
         if (picture) {
             img.src = picture;
+            img.alt = `An image of a ${name}`;
         } else {
             img_div.hidden = true;
             img_div.ariaHidden = "hide";
@@ -540,8 +540,8 @@ async function loadBird(bird) {
         let img = document.createElement("img");
         img.classList.add("mx-auto", "object-fit-contain", "border", "border-dark");
         img.src = bird.picture;
+        img.alt = `An image of a ${bird.name}`;
         img_col.appendChild(img);
-        // todo source and alt
 
         img.style.maxWidth = "50%";
         img.style.maxHeight = "70%";
@@ -597,12 +597,19 @@ async function loadBird(bird) {
 
     // buttons
     let buttons_div = document.createElement("div");
-    buttons_div.classList.add("d-flex", "flex-row", "mt-5", "pt-3", "border-top");
-    col.appendChild(buttons_div);
+    buttons_div.classList.add("d-flex", "flex-row", "my-4", "pt-3", "border-top", "col-md-6", "mx-auto");
+    bod.appendChild(buttons_div);
 
     // delete button
     buttons_div.appendChild(createDeleteButton(bird, genus, "bird"));
+
+    // edit button
+    let edit_button = createEditButton(() => {loadBird(bird)});
+    buttons_div.appendChild(edit_button);
+
+    edit_button.addEventListener("click", () => {loadBirdEdit(col, buttons_div, bird, genus)});
 }
+
 
 async function loadTaxon(taxon) {
     let bod = document.getElementById("main-container");
@@ -691,7 +698,7 @@ async function loadTaxon(taxon) {
 
     // buttons
     let buttons_div = document.createElement("div");
-    buttons_div.classList.add("d-flex", "flex-row", "mt-4", "pt-3", "border-top", "col-md-6", "mx-auto");
+    buttons_div.classList.add("d-flex", "flex-row", "my-4", "pt-3", "border-top", "col-md-6", "mx-auto");
     bod.appendChild(buttons_div);
 
     if (taxon.level !== TAXONOMY_ORDER.length-1) {
@@ -704,128 +711,176 @@ async function loadTaxon(taxon) {
     edit_button.addEventListener("click", () => {loadTaxonEdit(col, buttons_div, taxon, father)});
 }
 
+async function loadBirdEdit(container, buttons_div, bird, genus) {
+    let form = await loadGeneralEdit(container, bird, genus);
+
+    let submit_button = createEditSubmitButton();
+    buttons_div.appendChild(submit_button);
+
+    submit_button.addEventListener("click", async function () {
+        try {
+            let data = new FormData(form);
+            data = Object.fromEntries(data.entries());
+
+            data.id = bird.id;
+
+            data.genus = parseInt(data.father);
+            data.father = undefined;
+
+            let response = await fetch("/edit/bird", {
+                method: "PUT",
+                headers: {
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify(data),
+            });
+            if (response.ok) {
+                let content = await response.json();
+
+                await loadBird(content);
+            } else {
+                alert("Error: Problem in request, please try again later");
+                await loadBird(bird);
+            }
+        } catch (e) {
+            alert(e);
+        }
+    });
+}
+
 async function loadTaxonEdit(container, buttons_div, taxon, father) {
-        clearElement(container);
+    let form = await loadGeneralEdit(container, taxon, father);
 
-        let form = document.createElement("form");
-        container.appendChild(form);
+    let submit_button = createEditSubmitButton();
+    buttons_div.appendChild(submit_button);
 
-        // name
-        let name_div = document.createElement("div");
-        name_div.classList.add("col-md-6", "mb-3")
-        form.appendChild(name_div);
+    submit_button.addEventListener("click", async function () {
+        try {
+            let data = new FormData(form);
+            data = Object.fromEntries(data.entries());
 
-        let name_input = document.createElement("input");
-        name_input.classList.add("form-control");
-        name_input.name = "name";
-        name_input.id = "input-name";
-        name_input.value = taxon.name;
+            data.id = taxon.id;
+            data.father = parseInt(data.father);
 
-        let name_label = document.createElement("h4");
-        name_label.classList.add("h4");
-        name_label.htmlFor = name_input.id;
-        name_label.appendChild(document.createTextNode("Name"));
+            let response = await fetch("/edit/taxon", {
+                method: "PUT",
+                headers: {
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify(data),
+            });
+            if (response.ok) {
+                let content = await response.json();
 
-        name_div.append(name_label, name_input);
+                await loadTaxon(content);
+            } else {
+                alert("Error: Problem in request, please try again later");
+                await loadTaxon(taxon);
+            }
+        } catch (e) {
+            alert(e);
+        }
+    });
+}
 
-        // description
-        let desc_div = document.createElement("div");
-        desc_div.classList.add("mb-3");
-        form.appendChild(desc_div);
+async function loadGeneralEdit(container, entry, father) {
+    clearElement(container);
 
-        let desc_input = document.createElement("textarea");
-        desc_input.classList.add("form-control");
-        desc_input.name = "description";
-        desc_input.id = "input-description";
-        desc_input.appendChild(document.createTextNode(taxon.description));
+    let form = document.createElement("form");
+    container.appendChild(form);
 
-        let desc_label = document.createElement("label");
-        desc_label.classList.add("h4");
-        desc_label.htmlFor = desc_input.id;
-        desc_label.appendChild(document.createTextNode("Description"))
+    // name
+    let name_div = document.createElement("div");
+    name_div.classList.add("col-md-6", "mb-3")
+    form.appendChild(name_div);
 
-        desc_div.append(desc_label, desc_input);
+    let name_input = document.createElement("input");
+    name_input.classList.add("form-control");
+    name_input.name = "name";
+    name_input.id = "input-name";
+    name_input.value = entry.name;
 
-        if (taxon.level < TAXONOMY_ORDER.length-2) {
-            // father
-            let parent_div = document.createElement("div");
-            parent_div.classList.add("col-md-6", "my-3");
-            form.appendChild(parent_div);
+    let name_label = document.createElement("h4");
+    name_label.classList.add("h4");
+    name_label.htmlFor = name_input.id;
+    name_label.appendChild(document.createTextNode("Name"));
 
-            let parent_input = document.createElement("select");
-            parent_input.classList.add("form-select");
-            parent_input.name = "father";
+    name_div.append(name_label, name_input);
 
-            let uncles;
-            try {
-                let response = await fetch(`get/level/${father.level}`);
-                if (!response.ok) {
-                    uncles = [father];
-                } else {
-                    uncles = await response.json();
-                }
-            } catch (e) {
-                alert(e);
+    // description
+    let desc_div = document.createElement("div");
+    desc_div.classList.add("mb-3");
+    form.appendChild(desc_div);
+
+    let desc_input = document.createElement("textarea");
+    desc_input.classList.add("form-control");
+    desc_input.name = "description";
+    desc_input.id = "input-description";
+    desc_input.style.overflow = "hidden"; // remove scrollbar
+    desc_input.appendChild(document.createTextNode(entry.description));
+
+    desc_input.addEventListener("input", () => {
+       desc_input.style.minHeight = `${desc_input.scrollHeight}px`
+    });
+
+    let desc_label = document.createElement("label");
+    desc_label.classList.add("h4");
+    desc_label.htmlFor = desc_input.id;
+    desc_label.appendChild(document.createTextNode("Description"))
+
+    desc_div.append(desc_label, desc_input);
+    desc_input.style.minHeight = `${desc_input.scrollHeight}px`
+
+    if (father.level < TAXONOMY_ORDER.length-1) {
+        // father
+        let parent_div = document.createElement("div");
+        parent_div.classList.add("col-md-6", "mb-3");
+        form.appendChild(parent_div);
+
+        let parent_input = document.createElement("select");
+        parent_input.classList.add("form-select");
+        parent_input.name = "father";
+        parent_input.id = "input-father"
+
+        let uncles;
+        try {
+            let response = await fetch(`get/level/${father.level}`);
+            if (!response.ok) {
                 uncles = [father];
+            } else {
+                uncles = await response.json();
             }
-
-            for (const uncle of uncles) {
-                let option = document.createElement("option");
-
-                option.value = uncle.id;
-                option.appendChild(document.createTextNode(uncle.name));
-
-                if (uncle.id === father.id) {
-                    option.selected = true;
-                }
-
-                parent_input.appendChild(option);
-            }
-
-            let parent_label = document.createElement("label");
-            parent_label.classList.add("h4");
-            parent_label.htmlFor = parent_input.id;
-            parent_label.appendChild(document.createTextNode(`${TAXONOMY_ORDER[father.level]}`));
-
-            desc_div.append(parent_label, parent_input);
+        } catch (e) {
+            alert(e);
+            uncles = [father];
         }
 
-        let submit_button = document.createElement("button");
-        submit_button.classList.add("btn", "btn-outline-success");
-        submit_button.appendChild(document.createTextNode("Submit edit"))
-        buttons_div.appendChild(submit_button);
+        for (const uncle of uncles) {
+            let option = document.createElement("option");
 
-        submit_button.addEventListener("click", async function () {
-            try {
-                let data = new FormData(form);
-                data = Object.fromEntries(data.entries());
+            option.value = uncle.id;
+            option.appendChild(document.createTextNode(uncle.name));
 
-                data.id = taxon.id;
-                data.father = parseInt(data.father);
-
-                let response = await fetch("/edit/taxon", {
-                    method: "PUT",
-                    headers: {
-                        "content-type": "application/json"
-                    },
-                    body: JSON.stringify(data),
-                });
-                if (response.ok) {
-                    let content = await response.json();
-
-                    await loadTaxon(content);
-                } else {
-                    alert("Error: Problem in request, please try again later");
-                    loadTaxon(taxon);
-                }
-            } catch (e) {
-                alert(e);
+            if (uncle.id === father.id) {
+                option.selected = true;
             }
-        });
 
-        form.addEventListener("submit", function (event) {
-            event.preventDefault();
-        });
+            parent_input.appendChild(option);
+        }
+
+        let parent_label = document.createElement("label");
+        parent_label.classList.add("h4");
+        parent_label.htmlFor = parent_input.id;
+        parent_label.appendChild(document.createTextNode(`${TAXONOMY_ORDER[father.level]}`));
+
+        parent_div.append(parent_label, parent_input);
+    }
+
+    form.addEventListener("submit", function (event) {
+        event.preventDefault();
+    });
+
+    return form;
 }
 
 function createDeleteButton(entry, father, type) {
@@ -875,6 +930,14 @@ function createEditButton(backFunction) {
     });
 
     return edit_button
+}
+
+function createEditSubmitButton() {
+    let submit_button = document.createElement("button");
+    submit_button.classList.add("btn", "btn-outline-success");
+    submit_button.appendChild(document.createTextNode("Submit edit"))
+
+    return submit_button;
 }
 
 async function createBreadcrumbDropdownInner (father, container) {
