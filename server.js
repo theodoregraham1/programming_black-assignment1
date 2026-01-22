@@ -101,7 +101,7 @@ app.post("/add/level/", (req, res) => {
     }
 });
 
-app.get("/delete/:type/:id", (req, res) => {
+app.delete("/delete/:type/:id", (req, res) => {
     let {type, id} = req.params;
     id = parseInt(id);
 
@@ -255,15 +255,15 @@ app.get("/get/birds/random/:n", (req, res) => {
         return;
     }
 
-    let birds = []
-    for (let i=0; i<n; i++) {
-        let i = Math.floor(Math.random() * birds.size());
+    let birds = [];
+    let i = 0;
+    while (i < n) {
+        let k = Math.floor(Math.random() * birds_data.size());
 
-        let bird = birds_data.getList()[i];
-        if (!bird || birds.includes(bird)) {
-            i--;
-        } else {
+        let bird = birds_data.getList()[k];
+        if (bird && !birds.includes(bird)) {
             birds.push(bird);
+            i++
         }
     }
 

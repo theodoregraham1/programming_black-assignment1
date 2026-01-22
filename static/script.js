@@ -50,7 +50,7 @@ function makeCard(data) {
     col.classList.add("col-md-3", "d-flex", "m-3");
 
     let card = document.createElement("div");
-    card.className = "card";
+    card.className = "card flex-grow-1";
 
     col.appendChild(card);
 
@@ -1032,7 +1032,9 @@ function createDeleteButton(entry, father, type) {
 
         delete_button.addEventListener("click", () => {
             console.log(`delete/${type}/${entry.id}`);
-            fetch(`delete/${type}/${entry.id}`)
+            fetch(`delete/${type}/${entry.id}`, {
+                method: "delete"
+            })
                 .then(response => {
                     if (!response.ok) {
                         throw new Error("Deletion unsuccessful")
