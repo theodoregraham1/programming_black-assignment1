@@ -459,14 +459,22 @@ function loadTaxonCreator(father) {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify(data)
-            })
-            let content = await response.json();
+            });
 
-            loadAddPlaceholder();
+            if (!response.ok) {
+                throw new Error("Error in response from server");
+            }
+            let taxon = await response.json();
+
             let dropdown_container = document.getElementById("breadcrumb-dropdown-li");
-            dropdown_container.hidden = false;
-            dropdown_container.ariaHidden = "show";
-            await updateBreadcrumb(content, dropdown_container);
+            dropdown_container.hidden = true;
+            dropdown_container.ariaHidden = "hide";
+            await updateBreadcrumb(taxon, dropdown_container);
+            if (taxon.level > 1) {
+                loadTaxonCreator(taxon);
+            } else {
+                loadBirdCreator(taxon);
+            }
         } catch (e) {
             alert(e);
         }
@@ -499,7 +507,7 @@ function updateBreadcrumb (choice, dropdown_container) {
 
     dropdown_container.insertAdjacentElement("beforebegin", bread_item);
 
-    if (choice.level >= 2) {
+    if (choice.level > 1) {
         // Reset dropdown
         createBreadcrumbDropdownInner(choice, dropdown_container);
     } else {
@@ -508,7 +516,6 @@ function updateBreadcrumb (choice, dropdown_container) {
     }
 }
 
-// TODO: Make entries editable as stretch
 async function loadBird(bird) {
     let bod = document.getElementById("main-container");
     clearElement(bod);
@@ -596,7 +603,6 @@ async function loadBird(bird) {
     genus_button.append(
         document.createTextNode("View "),
         getItalicSpan(genus.name),
-        document.createTextNode(" genus")
         );
     genus_div.appendChild(genus_button);
 
@@ -697,7 +703,6 @@ async function loadTaxon(taxon) {
         parent_button.append(
             document.createTextNode("View "),
             getItalicSpan(father.name),
-            document.createTextNode(` ${TAXONOMY_ORDER[father.level].toLowerCase()}`)
         );
         siblings_div.appendChild(parent_button);
     }
@@ -850,10 +855,9 @@ async function loadGeneralEdit(container, entry, father) {
     form.appendChild(desc_div);
 
     let desc_input = document.createElement("textarea");
-    desc_input.classList.add("form-control");
+    desc_input.classList.add("form-control", "overflow-hidden");
     desc_input.name = "description";
     desc_input.id = "input-description";
-    desc_input.style.overflow = "hidden"; // remove scrollbar
     desc_input.appendChild(document.createTextNode(entry.description));
 
     desc_input.addEventListener("input", () => {
@@ -934,10 +938,11 @@ function createDeleteButton(entry, father, type) {
         delete_button.appendChild(document.createTextNode("Confirm deletion"));
 
         delete_button.addEventListener("click", () => {
+            console.log(`delete/${type}/${entry.id}`);
             fetch(`delete/${type}/${entry.id}`)
                 .then(response => {
                     if (!response.ok) {
-                        throw new Error("Error: deletion unsuccessful")
+                        throw new Error("Deletion unsuccessful")
                     } else {
                         loadTaxon(father);
                     }
@@ -1020,6 +1025,7 @@ async function createBreadcrumbDropdownInner (father, container) {
     new_li.addEventListener("click", () => {
         loadTaxonCreator(father);
         container.hidden = true;
+        container.ariaHidden = "hide";
     })
 }
 

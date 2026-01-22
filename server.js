@@ -74,15 +74,21 @@ class EntityData {
         // Assume ids are unique
         this.#map.delete(id);
         this.#regenerateList();
+        this.#writeback();
     }
 
     removeByField(field, value) {
-        for (const entry of this.#map.entries()) {
-            if (entry.value[field] === value) {
-                this.#map.delete(entry.key);
+        let edited = false;
+        for (const entry of this.#data) {
+            if (entry[field] === value) {
+                this.#map.delete(entry.id);
+                edited = true;
             }
         }
-        this.#regenerateList();
+        if (edited) {
+            this.#regenerateList();
+            this.#writeback();
+        }
     }
 
     edit(id, new_fields, editable_fields) {
@@ -107,9 +113,9 @@ class EntityData {
     isValid(entity) {
         let i = 0;
         for (const key in entity) {
-            if (key in this.required_fields) {
+            if (this.required_fields.includes(key)) {
                 i++;
-            } else if (!key in this.optional_fields) {
+            } else if (!this.optional_fields.includes(key)) {
                 return false;
             }
         }
@@ -253,7 +259,7 @@ class TaxaData extends EntityData {
 
     removeById(id) {
         this.#removeTaxon(this.findById(id));
-    }
+    }z
 
     #removeTaxon(taxon) {
         if (taxon.id === 0) {
@@ -263,7 +269,7 @@ class TaxaData extends EntityData {
         if (taxon.level === 1) {
             birds_data.removeByField("genus", taxon.id);
         } else {
-            for (const child of this.findByField("father", taxon)) {
+            for (const child of this.findByField("father", taxon.id)) {
                 // Recursive call down the taxonomy tree to remove children
                 this.#removeTaxon(child);
             }
@@ -319,7 +325,7 @@ app.get("/index/cards/:n", (req, res) => {
         let i = Math.floor(Math.random() * birds.size());
 
         let bird = birds_data.getList()[i];
-        if (!bird || bird in birds) {
+        if (!bird || birds.includes(bird)) {
             i--;
         } else {
             birds.push(bird);
@@ -542,7 +548,7 @@ app.get("/delete/:type/:id", (req, res) => {
                 return;
         }
 
-        console.log(`/delete/${type}/: entry of id ${id} deleted`);
+        console.log(`/delete/${type}/: Entry of id ${id} deleted`);
 
         res.statusCode = 200;
         res.send();
