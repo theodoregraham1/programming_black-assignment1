@@ -115,13 +115,30 @@ function loadBrowse () {
     // Headers
     bod.appendChild(createHeader("Browse entries"));
 
-    let h3 = document.createElement("h3");
-    h3.className = "mb-3";
-    h3.appendChild(document.createTextNode(CLASS.name));
-    bod.appendChild(h3);
-    // todo AVES info
+    let class_div = document.createElement("div");
+    class_div.classList.add("col-md-9", "mx-auto");
+    bod.appendChild(class_div);
 
-    createBrowseLevel(CLASS, "0");
+    let h3 = document.createElement("h3");
+    h3.classList.add("mb-3");
+    h3.appendChild(getItalicSpan(CLASS.name));
+
+    let class_p = document.createElement("p");
+    class_p.appendChild(document.createTextNode(cutDescription(CLASS.description)));
+
+    let class_btn = document.createElement("button");
+    class_btn.classList.add("btn", "btn-sm", "btn-outline-primary");
+    class_btn.appendChild(document.createTextNode("View class"));
+    class_btn.addEventListener("click", () => {loadTaxon(CLASS)});
+
+    class_div.append(h3, class_p, class_btn);
+
+    let accordion_div = document.createElement("div");
+    accordion_div.classList.add("col-md-9", "mx-auto", "mt-3");
+    accordion_div.id = "browse-accordion-body";
+    bod.appendChild(accordion_div);
+
+    createBrowseLevel(CLASS, "browse-accordion");
 }
 
 async function createBrowseLevel (father, parent_level_id) {
@@ -132,12 +149,8 @@ async function createBrowseLevel (father, parent_level_id) {
         level_list.classList.add("border-bottom-0", "border-right-0")
     }
 
-    let container;
-    if (parent_level_id !== "0") {
-        container = document.getElementById(`${parent_level_id}-body`)
-    } else {
-        container = document.getElementById("main-container");
-    }
+    let container = document.getElementById(`${parent_level_id}-body`);
+
     container.appendChild(level_list);
 
     level_list.id = `${parent_level_id}-list`;
@@ -167,6 +180,7 @@ async function createBrowseLevel (father, parent_level_id) {
             opener.appendChild(p);
 
             if (new_level > 0) {
+                p.classList.add("fst-italic");
                 p.appendChild(document.createTextNode(name));
 
                 // If the level of the next item is a taxon, load its children when it is opened
@@ -177,12 +191,8 @@ async function createBrowseLevel (father, parent_level_id) {
                 btn.addEventListener("click", () => loadTaxon(child));
 
             } else {
-                // Title with scientific name as well
-                let {species} = child;
-
-                p.appendChild(document.createTextNode(`${name} - (`));
-                p.appendChild(getItalicSpan(`${father.name} ${species}`));
-                p.appendChild(document.createTextNode(")"));
+                // Title with scientific name
+                p.appendChild(createBothNamesTitle(child, father));
 
                 btn.addEventListener("click", () => loadBird(child));
             }
@@ -212,7 +222,6 @@ function createAccordionItem (item_id, item, parent_id) {
     opener.ariaExpanded = "false";
     opener.setAttribute("aria-controls", item_id);
     // Note: name text added in createBrowseLevel function, since the format of this differs between levels
-
     title.appendChild(opener)
 
     // Create body section
@@ -666,7 +675,7 @@ async function loadTaxon(taxon) {
     }
 
     // parts of the page for taxa that are not Aves
-    let father;
+    let father = undefined;
     if (taxon.level !== TAXONOMY_ORDER.length-1) {
         // siblings of the taxon
         let siblings_div = document.createElement("div");
@@ -814,9 +823,16 @@ async function loadTaxonEdit(container, buttons_div, taxon, father) {
             if (response.ok) {
                 let content = await response.json();
 
+                // reflect edit of aves
+                if (content.id === 0) {
+                    CLASS = content;
+                }
                 await loadTaxon(content);
             } else {
                 alert("Error: Problem in request, please try again later");
+
+
+
                 await loadTaxon(taxon);
             }
         } catch (e) {
@@ -872,7 +888,7 @@ async function loadGeneralEdit(container, entry, father) {
     desc_div.append(desc_label, desc_input);
     desc_input.style.minHeight = `${desc_input.scrollHeight}px`
 
-    if (father.level < TAXONOMY_ORDER.length-1) {
+    if (entry.level < TAXONOMY_ORDER.length-2) {
         // father
         let parent_div = document.createElement("div");
         parent_div.classList.add("col-md-6", "mb-3");
