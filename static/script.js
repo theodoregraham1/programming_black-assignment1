@@ -14,6 +14,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     await loadIndex();
 })
 
+/*
+Index
+ */
 async function loadIndex() {
     let bod = document.getElementById("main-container")
     clearElement(bod)
@@ -108,6 +111,9 @@ function makeCard(data) {
     return col;
 }
 
+/*
+Browse
+ */
 function loadBrowse () {
     let bod = document.getElementById("main-container");
     clearElement(bod);
@@ -245,6 +251,9 @@ function createAccordionItem (item_id, item, parent_id) {
     return new_li
 }
 
+/*
+Add
+ */
 function loadAdd() {
     let bod = document.getElementById("main-container");
     clearElement(bod);
@@ -335,8 +344,6 @@ function loadGeneralCreator() {
 }
 
 function loadBirdCreator(genus) {
-    // TODO: Make look good on mobile
-
     // Create bird creator form
     let form = loadGeneralCreator();
     let inputs_div = document.getElementById("add-form-inputs");
@@ -357,8 +364,9 @@ function loadBirdCreator(genus) {
     species_input.type = "text";
     species_input.required = true;
     species_input.placeholder = "Specific epithet";
+
     name_input.insertAdjacentElement("afterend", species_input);
-    name_input.parentElement.classList.add("input-group");
+    name_input.parentElement.classList.add("d-flex", "flex-column");
 
     // Picture input element
     let picture_div = document.createElement("div");
@@ -525,6 +533,56 @@ function updateBreadcrumb (choice, dropdown_container) {
     }
 }
 
+async function createBreadcrumbDropdownInner (father, container) {
+    clearElement(container);
+
+    let btn = document.createElement("span");
+    btn.classList.add("dropdown-toggle", "badge", "bg-primary");
+    btn.ariaExpanded = "false";
+    btn.type = "button";
+    btn.setAttribute("data-bs-toggle", "dropdown");
+    btn.appendChild(document.createTextNode("Select " + TAXONOMY_ORDER[father.level-1]));
+    container.appendChild(btn);
+
+    let options = document.createElement("ul");
+    options.className = "dropdown-menu";
+    container.appendChild(options);
+
+    try {
+        let choices = await getChildren(father.id);
+
+        for (let i = 0; i < choices.length; i++) {
+            let li = document.createElement("li");
+            li.id = `breadcrumb-dropdown-option-${father.level-1}-${i}`
+            li.className = "dropdown-item";
+            li.appendChild(document.createTextNode(choices[i].name));
+            options.appendChild(li)
+
+            li.addEventListener("click", () => {
+                updateBreadcrumb(choices[i], container)
+            });
+        }
+    } catch (e) {
+        alert(e);
+        clearElement(options);
+    }
+
+    let new_li = document.createElement("li");
+    new_li.id = `breadcrumb-dropdown-${father.level-1}-new`
+    new_li.className = "dropdown-item";
+    new_li.appendChild(document.createTextNode(`Create new ${TAXONOMY_ORDER[father.level-1]}`));
+    options.appendChild(new_li)
+
+    new_li.addEventListener("click", () => {
+        loadTaxonCreator(father);
+        container.hidden = true;
+        container.ariaHidden = "hide";
+    })
+}
+
+/*
+Entries
+ */
 async function loadBird(bird) {
     let bod = document.getElementById("main-container");
     clearElement(bod);
@@ -998,53 +1056,9 @@ function createEditSubmitButton() {
     return submit_button;
 }
 
-async function createBreadcrumbDropdownInner (father, container) {
-    clearElement(container);
-
-    let btn = document.createElement("span");
-    btn.classList.add("dropdown-toggle", "badge", "bg-primary");
-    btn.ariaExpanded = "false";
-    btn.type = "button";
-    btn.setAttribute("data-bs-toggle", "dropdown");
-    btn.appendChild(document.createTextNode("Select " + TAXONOMY_ORDER[father.level-1]));
-    container.appendChild(btn);
-
-    let options = document.createElement("ul");
-    options.className = "dropdown-menu";
-    container.appendChild(options);
-
-    try {
-        let choices = await getChildren(father.id);
-
-        for (let i = 0; i < choices.length; i++) {
-            let li = document.createElement("li");
-            li.id = `breadcrumb-dropdown-option-${father.level-1}-${i}`
-            li.className = "dropdown-item";
-            li.appendChild(document.createTextNode(choices[i].name));
-            options.appendChild(li)
-
-            li.addEventListener("click", () => {
-                updateBreadcrumb(choices[i], container)
-            });
-        }
-    } catch (e) {
-        alert(e);
-        clearElement(options);
-    }
-
-    let new_li = document.createElement("li");
-    new_li.id = `breadcrumb-dropdown-${father.level-1}-new`
-    new_li.className = "dropdown-item";
-    new_li.appendChild(document.createTextNode(`Create new ${TAXONOMY_ORDER[father.level-1]}`));
-    options.appendChild(new_li)
-
-    new_li.addEventListener("click", () => {
-        loadTaxonCreator(father);
-        container.hidden = true;
-        container.ariaHidden = "hide";
-    })
-}
-
+/*
+Retrieval functions
+ */
 async function getTaxon(id) {
     let response = await fetch(`get/entity/taxon/${id}`)
 
@@ -1065,6 +1079,9 @@ async function getChildren(id) {
     return await response.json();
 }
 
+/*
+Formatting functions
+ */
 function createListGroup(father, children, container) {
         if (children.length !== 0) {
             let list_div = document.createElement("div");
