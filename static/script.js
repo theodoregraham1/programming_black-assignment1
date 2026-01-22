@@ -821,7 +821,9 @@ async function loadBirdEdit(container, buttons_div, image_preview, bird, genus) 
             image_preview.hide = "show";
             image_preview.src = img_input.value;
         }
-    })
+    });
+
+    // todo: specific epiphet
 
     let submit_button = createEditSubmitButton();
     buttons_div.appendChild(submit_button);
@@ -946,7 +948,7 @@ async function loadGeneralEdit(container, entry, father) {
     desc_div.append(desc_label, desc_input);
     desc_input.style.minHeight = `${desc_input.scrollHeight}px`
 
-    if (entry.level < TAXONOMY_ORDER.length-2) {
+    if (entry.level < TAXONOMY_ORDER.length-2 || !entry.level) {
         // father
         let parent_div = document.createElement("div");
         parent_div.classList.add("col-md-6", "mb-3");
