@@ -20,16 +20,21 @@ async function loadIndex() {
 
     bod.append(createHeader("Birdipedia"))
 
-    // TODO
     const NUMBER_OF_CARDS = 3;
     let row = document.createElement("div");
-    row.className = "d-flex flex-row align-items-stretch";
+    row.className = "d-flex flex-row flex-wrap justify-content-center";
 
     try {
         let response = await fetch(`index/cards/${NUMBER_OF_CARDS}`);
-        let content = await response.json();
-
-        content.forEach(bird => row.appendChild(makeCard(bird)));
+        let content;
+        if (!response.ok) {
+            alert("Error in request");
+        } else {
+            content = await response.json();
+            for (const bird of content) {
+                row.appendChild(makeCard(bird));
+            }
+        }
     } catch (e) {
         alert(e);
     }
@@ -39,20 +44,16 @@ async function loadIndex() {
 function makeCard(data) {
     // Constant elements
     let col = document.createElement("div");
-    col.classList.add("col-lg-auto", "mb-3", "me-3", "d-flex");
+    col.classList.add("col-md-3", "d-flex", "m-3");
 
     let card = document.createElement("div");
     card.className = "card";
-    //card.style.minHeight = "100%";
-    card.style.maxWidth = "300px";
-    col.appendChild(card);
 
-    let img_div = document.createElement("div");
-    card.appendChild(img_div)
+    col.appendChild(card);
 
     let img = document.createElement("img");
     img.className = "card-img-top";
-    img_div.appendChild(img);
+    card.appendChild(img);
 
     let card_bod = document.createElement("div");
     card_bod.className = "card-body d-flex flex-column";
@@ -74,22 +75,21 @@ function makeCard(data) {
     try {
         let {id, name, description, picture} = data;
 
-        if (picture) {
-            img.src = picture;
-            img.alt = `An image of a ${name}`;
-        } else {
-            img_div.hidden = true;
-            img_div.ariaHidden = "hide";
-        }
-
         card_title.appendChild(document.createTextNode(name));
 
         card_text.appendChild(document.createTextNode(cutDescription(description)));
         card_btn.id = `card-${id}-btn`;
         card_btn.addEventListener("click", () => loadBird(data))
 
-    } catch (e) {
+        if (picture) {
+            img.src = picture;
+            img.alt = `An image of a ${name}`;
+        } else {
+            img.hidden = true;
+            img.ariaHidden = "hide";
+        }
 
+    } catch (e) {
         card_title.classList.add("placeholder-glow");
         let title_holder = document.createElement("span");
         title_holder.classList.add("col-6", "placeholder");
@@ -100,6 +100,9 @@ function makeCard(data) {
             description_holder.classList.add("col-8", "placeholder");
             card_text.appendChild(description_holder)
         }
+
+        card_btn.hidden = true;
+        card.ariaHidden = "hide";
     }
 
     return col;
@@ -258,7 +261,6 @@ function loadAdd() {
     let drop_item = document.createElement("li");
     drop_item.id = "breadcrumb-dropdown-li"
     drop_item.className = "breadcrumb-item";
-    drop_item.style.width = Math.ceil(bread_dropdown.clientWidth * 1.2).toString();
     drop_item.appendChild(bread_dropdown);
     bread_ol.appendChild(drop_item);
 
@@ -378,7 +380,7 @@ function loadBirdCreator(genus) {
     preview_div.appendChild(preview_label);
 
     let picture_preview = document.createElement("img");
-    picture_preview.classList.add("p-3", "mx-auto", "object-fit-contain");
+    picture_preview.classList.add("p-3", "mx-auto", "object-fit-scale");
     picture_preview.style.maxWidth = "100%";
     picture_preview.alt = "Preview of the bird's image which you have uploaded";
 
@@ -530,21 +532,24 @@ async function loadBird(bird) {
         small_text
     );
 
-    if (bird.picture) {
-        // column
-        let img_col = document.createElement("div");
-        img_col.classList.add("col-md-6", "mx-auto", "text-center", "pb-3");
-        bod.appendChild(img_col);
+    let img_col = document.createElement("div");
+    // column
+    img_col.classList.add("col-md-6", "mx-auto", "text-center", "pb-3");
+    bod.appendChild(img_col);
 
-        // image
-        let img = document.createElement("img");
-        img.classList.add("mx-auto", "object-fit-contain", "border", "border-dark");
-        img.src = bird.picture;
-        img.alt = `An image of a ${bird.name}`;
-        img_col.appendChild(img);
+    // image
+    let img = document.createElement("img");
+    img.classList.add("mx-auto", "object-fit-contain", "border", "border-dark");
+    img.src = bird.picture;
+    img.alt = `An image of a ${bird.name}`;
+    img_col.appendChild(img);
 
-        img.style.maxWidth = "50%";
-        img.style.maxHeight = "70%";
+    img.style.maxWidth = "50%";
+    img.style.maxHeight = "70%";
+
+    if (!bird.picture) {
+        img.hidden = true;
+        img.ariaHidden = "hide";
     }
 
     // column
@@ -607,9 +612,10 @@ async function loadBird(bird) {
     let edit_button = createEditButton(() => {loadBird(bird)});
     buttons_div.appendChild(edit_button);
 
-    edit_button.addEventListener("click", () => {loadBirdEdit(col, buttons_div, bird, genus)});
+    edit_button.addEventListener("click", () => {
+        loadBirdEdit(col, buttons_div, img, bird, genus);
+    });
 }
-
 
 async function loadTaxon(taxon) {
     let bod = document.getElementById("main-container");
@@ -711,8 +717,39 @@ async function loadTaxon(taxon) {
     edit_button.addEventListener("click", () => {loadTaxonEdit(col, buttons_div, taxon, father)});
 }
 
-async function loadBirdEdit(container, buttons_div, bird, genus) {
+async function loadBirdEdit(container, buttons_div, image_preview, bird, genus) {
     let form = await loadGeneralEdit(container, bird, genus);
+
+    // picture
+    let img_div = document.createElement("div");
+    img_div.classList.add("mb-3");
+    form.insertBefore(img_div, form.firstChild);
+
+    let img_input = document.createElement("input");
+    img_input.classList.add("form-control");
+    img_input.name = "picture";
+    img_input.id = "input-picture";
+    img_input.value = bird.picture;
+    img_input.type = "url";
+
+    let img_label = document.createElement("label");
+    img_label.classList.add("h4");
+    img_label.htmlFor = img_input.id;
+    img_label.appendChild(document.createTextNode("Image"));
+
+    img_div.append(img_label, img_input);
+
+    image_preview.classList.remove("border", "border-dark");
+    img_input.addEventListener("input", () => {
+        if (!img_input.value) {
+            image_preview.hidden = true;
+            image_preview.hide = "hide";
+        } else {
+            image_preview.hidden = false;
+            image_preview.hide = "show";
+            image_preview.src = img_input.value;
+        }
+    })
 
     let submit_button = createEditSubmitButton();
     buttons_div.appendChild(submit_button);
@@ -800,7 +837,7 @@ async function loadGeneralEdit(container, entry, father) {
     name_input.id = "input-name";
     name_input.value = entry.name;
 
-    let name_label = document.createElement("h4");
+    let name_label = document.createElement("label");
     name_label.classList.add("h4");
     name_label.htmlFor = name_input.id;
     name_label.appendChild(document.createTextNode("Name"));
