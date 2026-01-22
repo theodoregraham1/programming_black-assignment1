@@ -823,7 +823,23 @@ async function loadBirdEdit(container, buttons_div, image_preview, bird, genus) 
         }
     });
 
-    // todo: specific epiphet
+    // species
+    let species_div = document.createElement("div");
+    species_div.classList.add("mb-3");
+
+    let species_input = document.createElement("input");
+    species_input.classList.add("form-control", "fst-italic");
+    species_input.name = "species";
+    species_input.id = "input-species";
+    species_input.value = bird.species;
+
+    let species_label = document.createElement("label");
+    species_label.classList.add("h4");
+    species_label.htmlFor = species_input.id;
+    species_label.appendChild(document.createTextNode("Specific epithet:"))
+
+    species_div.append(species_label, species_input);
+    document.getElementById("input-div-name").after(species_div);
 
     let submit_button = createEditSubmitButton();
     buttons_div.appendChild(submit_button);
@@ -909,7 +925,8 @@ async function loadGeneralEdit(container, entry, father) {
 
     // name
     let name_div = document.createElement("div");
-    name_div.classList.add("col-md-6", "mb-3")
+    name_div.classList.add("col-md-6", "mb-3");
+    name_div.id = "input-div-name";
     form.appendChild(name_div);
 
     let name_input = document.createElement("input");
