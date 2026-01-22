@@ -28,7 +28,7 @@ async function loadIndex() {
     row.className = "d-flex flex-row flex-wrap justify-content-center";
 
     try {
-        let response = await fetch(`index/cards/${NUMBER_OF_CARDS}`);
+        let response = await fetch(`get/birds/random/${NUMBER_OF_CARDS}`);
         let content;
         if (!response.ok) {
             alert("Error in request");

@@ -22,44 +22,9 @@ app.get("/", (req, res) => {
     res.redirect("index.html");
 });
 
-app.get("/index/cards/:n", (req, res) => {
-    let {n} = req.params;
-
-    n = parseInt(n);
-    if (isNaN(n)) {
-        res.statusCode = 400;
-        res.contentType("text/plain")
-        res.send("Request is invalid")
-        return;
-    }
-
-    if (n >= birds_data.size()) {
-        res.statusCode = 200;
-        res.contentType("application/json");
-        res.send(JSON.stringify(birds_data.getList()));
-        return;
-    }
-
-    let birds = []
-    for (let i=0; i<n; i++) {
-        let i = Math.floor(Math.random() * birds.size());
-
-        let bird = birds_data.getList()[i];
-        if (!bird || birds.includes(bird)) {
-            i--;
-        } else {
-            birds.push(bird);
-        }
-    }
-
-    res.statusCode = 200;
-    res.contentType("application/json");
-    res.send(JSON.stringify(birds))
-});
-
-// For adding check that the item doesn't already exist, if it does replace it
 app.post("/add/species/", (req, res) => {
-    // Data per bird: genus, picture, name, id, description
+    // For adding check that the item doesn't already exist, if it does replace it
+
     // Validate data
     const {name, species, genus, picture, description} = req.body;
 
@@ -135,100 +100,6 @@ app.post("/add/level/", (req, res) => {
         res.send(JSON.stringify(e));
     }
 });
-
-app.get("/get/entity/:type/:id", (req, res) => {
-    let {type, id} = req.params;
-    id = parseInt(id);
-
-    if (isNaN(id) || typeof type !== "string") {
-        res.statusCode = 400;
-        res.contentType("text/plain");
-        res.send("Error: Invalid parameters");
-        return;
-    }
-
-    let data;
-    switch (type) {
-        case "taxon":
-            data = taxa_data.findById(id);
-            break;
-
-        case "bird":
-            data = birds_data.findById(id);
-            break;
-        default:
-            // Premature break on error
-            console.log("/get/entity/: Error invalid entity type");
-
-            res.statusCode = 400;
-            res.contentType("text/plain");
-            res.send("Invalid entity type");
-            return;
-    }
-
-    console.log(`/get/entity/: ${type} number ${id} queried`)
-    if (data) {
-        res.statusCode = 200;
-        res.contentType("application/json");
-        res.send(JSON.stringify(data));
-    } else {
-        res.statusCode = 400;
-        res.contentType("text/plain");
-        res.send("Entity does not exist");
-    }
-});
-
-app.get("/get/children/:father", (req, res) => {
-    let {father} = req.params;
-
-    father = parseInt(father);
-
-    if (isNaN(father)) {
-        res.statusCode = 400;
-        res.contentType("text/plain");
-        res.send("Error: parameter must be a number");
-        return;
-    }
-    let taxon = taxa_data.findById(father);
-
-    if (!taxon) {
-        res.statusCode = 400;
-        res.contentType("text/plain");
-        res.send("Entity does not exist");
-        return;
-    }
-
-    let children;
-    if (taxon.level !== 1) {
-        children = taxa_data.findByField("father", father);
-    } else {
-        children = birds_data.findByField("genus", father);
-    }
-    console.log(`/get/children/: Children of ${father} queried`)
-
-    res.statusCode = 200;
-    res.contentType("application/json");
-    res.send(JSON.stringify(children));
-});
-
-app.get("/get/level/:level", (req, res) => {
-    let {level} = req.params;
-
-    level = parseInt(level);
-
-    if (isNaN(level) || level < 1 || level > 4) {
-        res.statusCode = 400;
-        res.contentType("text/plain");
-        res.send("Error: parameter must be a number");
-        return;
-    }
-
-    console.log(`/get/level/: level ${level} queried`);
-
-    res.statusCode = 200;
-    res.contentType("application/json")
-    res.send(JSON.stringify(taxa_data.findByField("level", level)));
-})
 
 app.get("/delete/:type/:id", (req, res) => {
     let {type, id} = req.params;
@@ -323,6 +194,135 @@ app.put("/edit/:type/", (req, res) => {
         res.send(JSON.stringify(e));
     }
 });
+
+app.get("/get/entity/:type/:id", (req, res) => {
+    let {type, id} = req.params;
+    id = parseInt(id);
+
+    if (isNaN(id) || typeof type !== "string") {
+        res.statusCode = 400;
+        res.contentType("text/plain");
+        res.send("Error: Invalid parameters");
+        return;
+    }
+
+    let data;
+    switch (type) {
+        case "taxon":
+            data = taxa_data.findById(id);
+            break;
+
+        case "bird":
+            data = birds_data.findById(id);
+            break;
+        default:
+            // Premature break on error
+            console.log("/get/entity/: Error invalid entity type");
+
+            res.statusCode = 400;
+            res.contentType("text/plain");
+            res.send("Invalid entity type");
+            return;
+    }
+
+    console.log(`/get/entity/: ${type} number ${id} queried`)
+    if (data) {
+        res.statusCode = 200;
+        res.contentType("application/json");
+        res.send(JSON.stringify(data));
+    } else {
+        res.statusCode = 400;
+        res.contentType("text/plain");
+        res.send("Entity does not exist");
+    }
+});
+
+app.get("/get/birds/random/:n", (req, res) => {
+    let {n} = req.params;
+
+    n = parseInt(n);
+    if (isNaN(n)) {
+        res.statusCode = 400;
+        res.contentType("text/plain")
+        res.send("Request is invalid")
+        return;
+    }
+
+    if (n >= birds_data.size()) {
+        res.statusCode = 200;
+        res.contentType("application/json");
+        res.send(JSON.stringify(birds_data.getList()));
+        return;
+    }
+
+    let birds = []
+    for (let i=0; i<n; i++) {
+        let i = Math.floor(Math.random() * birds.size());
+
+        let bird = birds_data.getList()[i];
+        if (!bird || birds.includes(bird)) {
+            i--;
+        } else {
+            birds.push(bird);
+        }
+    }
+
+    res.statusCode = 200;
+    res.contentType("application/json");
+    res.send(JSON.stringify(birds))
+});
+
+app.get("/get/children/:father", (req, res) => {
+    let {father} = req.params;
+
+    father = parseInt(father);
+
+    if (isNaN(father)) {
+        res.statusCode = 400;
+        res.contentType("text/plain");
+        res.send("Error: parameter must be a number");
+        return;
+    }
+    let taxon = taxa_data.findById(father);
+
+    if (!taxon) {
+        res.statusCode = 400;
+        res.contentType("text/plain");
+        res.send("Entity does not exist");
+        return;
+    }
+
+    let children;
+    if (taxon.level !== 1) {
+        children = taxa_data.findByField("father", father);
+    } else {
+        children = birds_data.findByField("genus", father);
+    }
+    console.log(`/get/children/: Children of ${father} queried`)
+
+    res.statusCode = 200;
+    res.contentType("application/json");
+    res.send(JSON.stringify(children));
+});
+
+app.get("/get/level/:level", (req, res) => {
+    let {level} = req.params;
+
+    level = parseInt(level);
+
+    if (isNaN(level) || level < 1 || level > 4) {
+        res.statusCode = 400;
+        res.contentType("text/plain");
+        res.send("Error: parameter must be a number");
+        return;
+    }
+
+    console.log(`/get/level/: level ${level} queried`);
+
+    res.statusCode = 200;
+    res.contentType("application/json")
+    res.send(JSON.stringify(taxa_data.findByField("level", level)));
+})
 
 app.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}`)
