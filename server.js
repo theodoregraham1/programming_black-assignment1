@@ -322,7 +322,37 @@ app.get("/get/level/:level", (req, res) => {
     res.statusCode = 200;
     res.contentType("application/json")
     res.send(JSON.stringify(taxa_data.findByField("level", level)));
-})
+});
+
+app.get("/list/:type", (req, res) => {
+    let {type} = req.params;
+
+    let data;
+    switch (type) {
+        case "taxon":
+            data = taxa_data.getList();
+            break;
+
+        case "bird":
+            data = birds_data.getList();
+            break;
+
+        default:
+            // Premature break on error
+            console.log("/list/: Error invalid entity type");
+
+            res.statusCode = 400;
+            res.contentType("text/plain");
+            res.send("Invalid entity type");
+            return;
+    }
+
+    console.log(`/list/: ${type} data queried`);
+
+    res.statusCode = 200;
+    res.contentType("application/json")
+    res.send(JSON.stringify(data));
+});
 
 app.listen(port, hostname, () => {
     console.log(`Server running at http://${hostname}:${port}`)
