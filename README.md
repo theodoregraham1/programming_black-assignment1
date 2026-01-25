@@ -47,10 +47,10 @@ During errors, returns plain text or JSON error data.
 
 ### DELETE `/delete/:type/:id`
 
-#### Parameters
+#### URL Parameters
 
-- `type` - Either "taxon" or "bird": the type of entity being deleted
-- `id` - An integer which is the ID of the entity being deleted
+- `type` - either "taxon" or "bird": the type of entity being deleted
+- `id` - an integer which is the ID of the entity being deleted
 
 #### Returns
 
@@ -58,7 +58,7 @@ Only returns data on error
 
 ### PUT `/edit/:type/`
 
-#### Parameters
+#### URL Parameters
 
 - `type` - Either "taxon" or "bird": the type of entity being edited
 
@@ -86,3 +86,39 @@ Returns an `object` of the updated entry.
 
 ### GET `/get/entity/:type/:id`
 
+#### URL Parameters
+
+- `type` - either "taxon" or "bird", the type of entity being accessed
+- `id` - the ID of the entity being accessed
+
+#### Returns
+
+TODO
+
+### GET `/get/birds/random/:n`
+
+#### URL Parameters
+
+- `n` - The number of birds to be queried 
+
+#### Returns
+
+TODO
+
+### GET `/get/children/:father`
+
+#### URL Parameters
+
+- `father` - the ID of the taxon which is the parent being accessed
+
+#### Returns
+
+If the `level` of the parent is 1 (a genus), every bird in that genus is returned. Else every taxon with this parent is returned.
+
+### GET `get/level/:level`
+
+#### URL Parameters
+
+- `level` 
+
+#### Returns
