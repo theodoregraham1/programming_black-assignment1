@@ -230,6 +230,7 @@ app.get("/get/entity/:type/:id", (req, res) => {
         res.statusCode = 200;
         res.contentType("application/json");
         res.send(JSON.stringify(data));
+
     } else {
         res.statusCode = 400;
         res.contentType("text/plain");

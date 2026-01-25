@@ -1,10 +1,18 @@
 # API
 
+---
+
 ## Index
 
 ### GET `/`
 
-Index, provides the base HTML page
+Index, provides the base HTML page.
+
+#### Returns
+
+A HTML file ("index.html")
+
+---
 
 ## Adding Entries
 
@@ -26,6 +34,8 @@ Normally, returns an `object` containing the bird's data. It should be identical
 
 During errors, can return plain text or a JSON representation of the error
 
+---
+
 ### POST `/add/level/`
 
 Adds a new taxon to the table of taxa. Returns the created entry.
@@ -43,9 +53,13 @@ Normally, returns an `object` containing the taxon's data.
 
 During errors, returns plain text or JSON error data.
 
+---
+
 ## Editing Entries
 
 ### DELETE `/delete/:type/:id`
+
+Deletes an entry from one of the data tables.
 
 #### URL Parameters
 
@@ -56,13 +70,18 @@ During errors, returns plain text or JSON error data.
 
 Only returns data on error
 
+---
+
 ### PUT `/edit/:type/`
+
+Updates the data in an entry from one of the data tables.
 
 #### URL Parameters
 
 - `type` - Either "taxon" or "bird": the type of entity being edited
 
 #### Request Body
+
 - `id` : `number` - the ID of the entity being edited.
 
 When `type` = "taxon":
@@ -82,9 +101,13 @@ When `type` = "bird":
 
 Returns an `object` of the updated entry.
 
+---
+
 ## Getters
 
 ### GET `/get/entity/:type/:id`
+
+Retrieves a specific entry from the data tables, selected by its ID.
 
 #### URL Parameters
 
@@ -93,9 +116,13 @@ Returns an `object` of the updated entry.
 
 #### Returns
 
-TODO
+Returns an `object` of the matching entry or throws an error if either `type` is not valid or an entity with a matching `id` does not exist.
+
+---
 
 ### GET `/get/birds/random/:n`
+
+Retrieves a chosen number of random distinct birds from the data table
 
 #### URL Parameters
 
@@ -103,9 +130,17 @@ TODO
 
 #### Returns
 
-TODO
+Returns an `object` array with `n` items if there are at least `n` birds in the bird table. They will all be different birds.
+
+If there are less than `n` birds in the table, all birds in the table will be returned.
+
+---
 
 ### GET `/get/children/:father`
+
+Retrieves all the children of a parent taxon from a data table as selected by the level of the parent (e.g. if the parent 
+is a genus, all the birds in that genus will be returned, or if the parent is an order, the returned objects will be taxa 
+with a `level` of 2 - families).
 
 #### URL Parameters
 
@@ -113,12 +148,36 @@ TODO
 
 #### Returns
 
-If the `level` of the parent is 1 (a genus), every bird in that genus is returned. Else every taxon with this parent is returned.
+Returns an `object` array.
+
+If the `level` of the parent is `1`, every bird in that genus is returned, else every child taxon of this parent is returned.
+
+---
 
 ### GET `get/level/:level`
 
+Retrieves all taxa of a given level. 
+
 #### URL Parameters
 
-- `level` 
+- `level` - an integer from 1 to 5 inclusive which designates the taxonomical level to be queried.
 
 #### Returns
+
+An `object` array containing every item in the table of taxa which has a matching level.
+
+---
+
+### GET `list/:type`
+
+Retrieves all data from a table
+
+#### URL Parameters
+
+- `type` - either "taxon" or "bird", the type of entity to retrieve 
+
+#### Returns 
+
+Returns all the data for every bird or every taxon respectively
+
+Returns an error if `type` does not match one of the two tables.
