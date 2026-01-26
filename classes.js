@@ -156,7 +156,7 @@ class BirdsData extends EntityData {
         }
 
         super(
-            "./birds.json",
+            "./data/birds.json",
             [],
             ["name", "species", "genus", "description"],
             ["picture"]
@@ -220,7 +220,7 @@ class TaxaData extends EntityData {
         }
 
         super(
-            "./taxa.json",
+            "./data/taxa.json",
             [{
                 id: 0,
                 name: "Aves",
