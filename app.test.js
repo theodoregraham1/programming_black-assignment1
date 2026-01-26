@@ -1,9 +1,8 @@
 const app = require("./app");
 
 const request = require("supertest");
-const {response} = require("express");
 
-describe("Test getters", () => {
+describe("Test /get/entity/taxon/", () => {
     test("Base taxon called", (done) => {
         request(app).get("/get/entity/taxon/0")
             .then(response => {
@@ -23,10 +22,22 @@ describe("Test getters", () => {
     });
 
     test("Erraneous taxon called", async () => {
-        const response = await request(app).get("/get/entity/taxon/null");
+        const INCORRECT_TAXA = [null, -1];
+
+        for (const taxon of INCORRECT_TAXA) {
+            const response = await request(app).get(`/get/entity/taxon/${taxon}`);
+
+            expect(response.ok).toBeFalsy();
+            expect(response.statusCode).toBe(400);
+            expect(response.headers["content-type"]).toMatch(/text/);
+        }
+    })
+
+    test("Incorrect URL called", async () => {
+        const response = await request(app).get("/get/entity/test/0");
 
         expect(response.ok).toBeFalsy();
         expect(response.statusCode).toBe(400);
-
-    })
+        expect(response.headers["content-type"]).toMatch(/text/);
+    });
 });
