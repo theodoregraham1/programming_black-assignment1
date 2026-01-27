@@ -42,9 +42,7 @@ let valid_birds = [
 ]
 
 describe("Test /add/", () => {
-
     test("Add valid taxa", async () => {
-
         let i = 1;
 
         for (const object of valid_taxa) {
@@ -124,11 +122,23 @@ describe("Test /add/", () => {
     });
 
     test("Post-add taxa file check", () => {
+        let taxa_data = JSON.parse(fs.readFileSync(TEST_FILES.taxa, "utf-8"));
 
+        expect(valid_taxa.length).toBe(6);
+        expect(taxa_data.length).toBe(7); // aves not included
+        for (const t of valid_taxa) {
+            expect(taxa_data).toContainEqual(t);
+        }
     });
 
     test("Post-add birds file check", () => {
+        let birds_data = JSON.parse(fs.readFileSync(TEST_FILES.birds, "utf-8"));
 
+        expect(valid_birds.length).toBe(3);
+        expect(birds_data.length).toBe(3);
+        for (const t of valid_birds) {
+            expect(birds_data).toContainEqual(t);
+        }
     });
 })
 
@@ -405,6 +415,7 @@ describe("Test /delete/", () => {
         expect(check_response.body).toEqual({});
     });
 
+    let deleted_taxa_ids = [2, 3, 6];
     test("Valid delete taxon", async () => {
         const response = await request(app).delete(`/delete/taxon/2`); // delete family1
 
@@ -414,7 +425,7 @@ describe("Test /delete/", () => {
 
         // Check delete
         // family1, genus1, genus2 and all birds should be deleted
-        for (const i of [2, 3, 6]) {
+        for (const i of deleted_taxa_ids) {
             const check_response = await request(app).get(`/get/entity/taxon/${i}`);
 
             expect(check_response.body).toEqual({});
@@ -458,13 +469,29 @@ describe("Test /delete/", () => {
     });
 
     test("Post-delete taxa file check", () => {
+        let new_valid_taxa = [];
+
+        for (const ob of valid_taxa) {
+            if (!deleted_taxa_ids.includes(ob.id)) {
+                new_valid_taxa.push(ob);
+            }
+        }
+        valid_taxa = new_valid_taxa
+
         let taxa_data = JSON.parse(fs.readFileSync(TEST_FILES.taxa, "utf-8"));
 
-
+        expect(valid_taxa.length).toBe(4);
+        expect(taxa_data.length).toBe(4);
+        for (const t of taxa_data) {
+            expect(valid_taxa).toContainEqual(t);
+        }
     });
 
     test("Post-delete birds file check", () => {
+        let birds_data = JSON.parse(fs.readFileSync(TEST_FILES.birds, "utf-8"));
 
+        expect(birds_data.length).toBe(0);
+        expect(birds_data).toEqual([]);
     });
 });
 
