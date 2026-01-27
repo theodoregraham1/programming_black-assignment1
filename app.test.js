@@ -38,7 +38,7 @@ let valid_taxa = [
 let valid_birds = [
     {name: "bird1", species: "species1", genus: 3, description: "test"},
     {name: "bird2", species: "species2", genus: 3, description: "test", picture: "..."},
-    {name: "bird2", species: "species2", genus: 6, description: "test", picture: "..."},
+    {name: "bird3", species: "species3", genus: 6, description: "test", picture: "..."},
 ]
 
 describe("Test /add/", () => {
@@ -102,10 +102,30 @@ describe("Test /add/", () => {
             expect(response.body).toEqual(object);
         }
     });
+
+    test("Add invalid birds", async () => {
+        let invalid_birds = [
+            {species: "invalid", genus: 3, description: "test"},
+            {name: "invalid", genus: 3, description: "test"},
+            {name: "invalid", species: "invalid", description: "test"},
+            {name: "invalid", species: "invalid", genus: 3},
+            {name: "invalid", species: "invalid", genus: 2, description: "test", picture: "..."},
+            {name: "invalid", species: "invalid", genus: 0, description: "test", picture: "..."},
+            {name: "invalid", species: "invalid", genus: -1, description: "test", picture: "..."},
+        ]
+
+        for (const object of invalid_birds) {
+            let response = await request(app).post("/add/bird/")
+                .send(object);
+
+            expect(response.ok).toBeFalsy();
+            expect(response.statusCode).toBe(400);
+        }
+    })
 })
 
 describe("Test /get/entity/", () => {
-    test("Base taxon called", (done) => {
+    test("Base taxon queried", (done) => {
         request(app).get("/get/entity/taxon/0")
             .then(response => {
                 expect(response.statusCode).toBe(200);
@@ -120,13 +140,14 @@ describe("Test /get/entity/", () => {
                     })
                 );
 
+                // Setup later tests
                 valid_taxa.push(response.body);
 
                 done();
             })
     });
 
-    test("Other taxa called", async () => {
+    test("Other valid taxa queried", async () => {
         for (const object of valid_taxa) {
             let response = await request(app).get(`/get/entity/taxon/${object.id}`)
 
@@ -138,7 +159,7 @@ describe("Test /get/entity/", () => {
         }
     })
 
-    test("Erraneous taxon called", async () => {
+    test("Invalid taxa queried", async () => {
         const INCORRECT_TAXA = [null, -1, valid_taxa.length**2];
 
         for (const taxon of INCORRECT_TAXA) {
@@ -150,17 +171,116 @@ describe("Test /get/entity/", () => {
         }
     })
 
-    test("Incorrect URL called", async () => {
+    test("Incorrect URL queried", async () => {
         const response = await request(app).get("/get/entity/test/0");
 
         expect(response.ok).toBeFalsy();
         expect(response.statusCode).toBe(400);
-        expect(response.headers["content-type"]).toMatch(/text/);
+    });
+
+    test("Valid birds queried", async () => {
+        for (const object of valid_birds) {
+            let response = await request(app).get(`/get/entity/bird/${object.id}`)
+
+            expect(response.ok).toBeTruthy();
+            expect(response.statusCode).toBe(200);
+            expect(response.headers["content-type"]).toMatch(/json/);
+
+            expect(response.body).toEqual(object);
+        }
+    });
+
+    test("Invalid birds queried", async () => {
+        const INVALID_BIRDS = [null, -1, valid_birds.length**2];
+
+        for (const bird of INVALID_BIRDS) {
+            const response = await request(app).get(`/get/entity/taxon/${bird}`);
+
+            expect(response.ok).toBeFalsy();
+            expect(response.statusCode).toBe(400);
+        }
+    })
+});
+
+describe("Test /list/", () => {
+    test("Test birds", async () => {
+        let response = await request(app).get("/list/bird");
+
+        expect(response.ok).toBeTruthy();
+        expect(response.statusCode).toBe(200);
+        expect(response.headers["content-type"]).toMatch(/json/);
+
+        for (const b of valid_birds) {
+            expect(response.body).toContainEqual(b);
+        }
+    });
+
+    test("Test taxa", async () => {
+        let response = await request(app).get("/list/taxon");
+
+        expect(response.ok).toBeTruthy();
+        expect(response.statusCode).toBe(200);
+        expect(response.headers["content-type"]).toMatch(/json/);
+
+        for (const t of valid_taxa) {
+            expect(response.body).toContainEqual(t);
+        }
     });
 });
 
 describe("Test /get/birds/random", () => {
+    test("Test random", async () => {
+        let response = await request(app).get("/get/birds/random/2");
 
+        expect(response.ok).toBeTruthy();
+        expect(response.statusCode).toBe(200);
+        expect(response.headers["content-type"]).toMatch(/json/);
+
+        expect(response.body.length).toBe(2);
+
+        for (const b of response.body) {
+            expect(valid_birds).toContainEqual(b);
+        }
+    });
+
+    test("Test determined", async () => {
+        let response = await request(app).get("/get/birds/random/3");
+
+        expect(response.ok).toBeTruthy();
+        expect(response.statusCode).toBe(200);
+        expect(response.headers["content-type"]).toMatch(/json/);
+
+        expect(response.body.length).toBe(3);
+
+        for (const b of valid_birds) {
+            expect(response.body).toContainEqual(b);
+        }
+    });
+
+    test("Test too many", async () => {
+        let response = await request(app).get("/get/birds/random/5");
+
+        expect(response.ok).toBeTruthy();
+        expect(response.statusCode).toBe(200);
+        expect(response.headers["content-type"]).toMatch(/json/);
+
+        expect(response.body.length).toBe(3);
+
+        for (const b of valid_birds) {
+            expect(response.body).toContainEqual(b);
+        }
+    });
+
+    test("Test non-integer parameter", async () => {
+        const INVALID_BIRDS = [null, -1, "test"];
+
+        for (const bird of INVALID_BIRDS) {
+            const response = await request(app).get(`/get/birds/random/${bird}`);
+
+            expect(response.ok).toBeFalsy();
+            expect(response.statusCode).toBe(400);
+        }
+    });
 });
 
 describe("Test /get/children/", () => {
@@ -168,10 +288,6 @@ describe("Test /get/children/", () => {
 });
 
 describe("Test /get/level/", () => {
-
-});
-
-describe("Test /list/", () => {
 
 });
 

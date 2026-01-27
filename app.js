@@ -51,15 +51,11 @@ function initialise(birds_filename, taxa_filename) {
             };
             bird = birds_data.push(bird);
 
-            console.log("/add/bird/: New bird successfully written to file")
-
             res.statusCode = 200;
             res.contentType("application/json");
             res.send(JSON.stringify(bird));
 
         } catch (e) {
-            console.log("/add/bird:", e);
-
             res.statusCode = 400;
             res.contentType("application/json");
             res.send(JSON.stringify(e));
@@ -89,8 +85,6 @@ function initialise(birds_filename, taxa_filename) {
             };
 
             taxa_data.push(taxon);
-
-            console.log("/add/taxon/: New taxon successfully written to file")
 
             res.statusCode = 200;
             res.contentType("application/json");
@@ -133,15 +127,11 @@ function initialise(birds_filename, taxa_filename) {
 
                 default:
                     // Premature break on error
-                    console.log("/delete/: Error invalid entity type");
-
                     res.statusCode = 400;
                     res.contentType("text/plain");
                     res.send("Invalid entity type");
                     return;
             }
-
-            console.log(`/delete/${type}/: Entry of id ${id} deleted`);
 
             res.statusCode = 200;
             res.send();
@@ -181,16 +171,12 @@ function initialise(birds_filename, taxa_filename) {
 
                 default:
                     // Premature break on error
-                    console.log("/get/entity/: Error, invalid entity type");
-
                     res.statusCode = 400;
                     res.contentType("text/plain");
                     res.send("Invalid entity type");
                     return;
             }
         } catch (e) {
-            console.log(e);
-
             res.statusCode = 400;
             res.contentType("application/json");
             res.send(JSON.stringify(e));
@@ -219,15 +205,12 @@ function initialise(birds_filename, taxa_filename) {
                 break;
             default:
                 // Premature break on error
-                console.log("/get/entity/: Error invalid entity type");
-
                 res.statusCode = 400;
                 res.contentType("text/plain");
                 res.send("Invalid entity type");
                 return;
         }
 
-        console.log(`/get/entity/: ${type} number ${id} queried`)
         if (data) {
             res.statusCode = 200;
             res.contentType("application/json");
@@ -301,7 +284,6 @@ function initialise(birds_filename, taxa_filename) {
         } else {
             children = birds_data.findByField("genus", father);
         }
-        console.log(`/get/children/: Children of ${father} queried`)
 
         res.statusCode = 200;
         res.contentType("application/json");
@@ -319,8 +301,6 @@ function initialise(birds_filename, taxa_filename) {
             res.send("Error: parameter must be a number");
             return;
         }
-
-        console.log(`/get/level/: level ${level} queried`);
 
         res.statusCode = 200;
         res.contentType("application/json")
@@ -342,15 +322,11 @@ function initialise(birds_filename, taxa_filename) {
 
             default:
                 // Premature break on error
-                console.log("/list/: Error invalid entity type");
-
                 res.statusCode = 400;
                 res.contentType("text/plain");
                 res.send("Invalid entity type");
                 return;
         }
-
-        console.log(`/list/: ${type} data queried`);
 
         res.statusCode = 200;
         res.contentType("application/json")
