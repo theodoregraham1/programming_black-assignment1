@@ -422,6 +422,14 @@ describe("Test /delete/", () => {
             expect(check_response.statusCode).toBe(400);
         }
 
+        for (const b of valid_birds) {
+            const check_response = await request(app).get(`/get/entity/bird/${b.id}`);
+
+            expect(check_response.body).toEqual({});
+            expect(check_response.ok).toBeFalsy();
+            expect(check_response.statusCode).toBe(400);
+        }
+
     });
 
     test("Invalid delete of Aves", async () => {
@@ -450,6 +458,8 @@ describe("Test /delete/", () => {
     });
 
     test("Post-delete taxa file check", () => {
+        let taxa_data = JSON.parse(fs.readFileSync(TEST_FILES.taxa, "utf-8"));
+
 
     });
 

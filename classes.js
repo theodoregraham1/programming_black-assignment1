@@ -69,8 +69,6 @@ class EntityData {
     removeById(id) {
         // Assume ids are unique
         this.#map.delete(id);
-        this.#regenerateList();
-        this.#writeback();
     }
 
     removeByField(field, value) {
@@ -82,8 +80,7 @@ class EntityData {
             }
         }
         if (edited) {
-            this.#regenerateList();
-            this.#writeback();
+            this.regenerateList();
         }
     }
 
@@ -100,10 +97,6 @@ class EntityData {
 
         this.#writeback();
         return entity;
-    }
-
-    getList() {
-        return this.#data;
     }
 
     isValid(entity) {
@@ -124,11 +117,13 @@ class EntityData {
         return out;
     }
 
-    #regenerateList() {
+    regenerateList() {
         this.#data = [];
         for (const v of this.#map.values()) {
             this.#data.push(v);
         }
+
+        this.#writeback();
     }
 
     #writeback() {
@@ -145,6 +140,9 @@ class EntityData {
         );
     }
 
+    getList() {
+        return this.#data;
+    }
 }
 
 class BirdsData extends EntityData {
@@ -195,6 +193,11 @@ class BirdsData extends EntityData {
             }
         }
         return super.edit(id, new_fields, editable_fields);
+    }
+    
+    removeById(id) {
+        super.removeById(id);
+        this.regenerateList();
     }
 
     isValid(bird) {
@@ -266,6 +269,7 @@ class TaxaData extends EntityData {
 
     removeById(id) {
         this.#removeTaxon(this.findById(id));
+        this.regenerateList();
     }
 
     #removeTaxon(taxon) {
@@ -282,6 +286,7 @@ class TaxaData extends EntityData {
             }
         }
         super.removeById(taxon.id);
+        
     }
 
     isValid(taxon) {
