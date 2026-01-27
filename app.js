@@ -24,7 +24,11 @@ function initialise(birds_filename, taxa_filename) {
         // For adding check that the item doesn't already exist, if it does replace it
 
         // Validate data
-        const {name, species, genus, picture, description} = req.body;
+        let {name, species, genus, picture, description} = req.body;
+
+        if (!picture) {
+            picture = "";
+        }
 
         if (
             typeof name !== "string" || typeof species !== "string"

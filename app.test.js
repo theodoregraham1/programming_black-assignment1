@@ -82,7 +82,7 @@ describe("Test /add/", () => {
         }
     });
 
-    test("Add bird", async () => {
+    test("Add valid birds", async () => {
         let i = 0;
 
         for (const object of valid_birds) {
@@ -91,7 +91,9 @@ describe("Test /add/", () => {
 
             object.id = i;
             i++;
-            console.log(response.body);
+            if (!object.picture) {
+                object.picture = "";
+            }
 
             expect(response.ok).toBeTruthy();
             expect(response.statusCode).toBe(200);
