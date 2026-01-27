@@ -117,13 +117,23 @@ function initialise(birds_filename, taxa_filename) {
                         // If the entry doesn't exist simply do nothing (don't throw an error)
                         if (taxon) {
                             taxa_data.removeById(taxon.id);
+                            break;
                         }
                     }
-                    break;
+                    res.statusCode = 400;
+                    res.contentType("text/plain");
+                    res.send("Invalid entity to delete");
+                    return;
 
                 case "bird":
-                    birds_data.removeById(id);
-                    break;
+                    if (birds_data.findById(id)) {
+                        birds_data.removeById(id);
+                        break;
+                    }
+                    res.statusCode = 400;
+                    res.contentType("text/plain");
+                    res.send("Invalid entity to delete");
+                    return;
 
                 default:
                     // Premature break on error
@@ -292,7 +302,6 @@ function initialise(birds_filename, taxa_filename) {
 
     app.get("/get/level/:level", (req, res) => {
         let {level} = req.params;
-
         level = parseInt(level);
 
         if (isNaN(level) || level < 1 || level > 4) {

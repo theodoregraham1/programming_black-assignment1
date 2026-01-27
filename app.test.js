@@ -121,7 +121,15 @@ describe("Test /add/", () => {
             expect(response.ok).toBeFalsy();
             expect(response.statusCode).toBe(400);
         }
-    })
+    });
+
+    test("Post-add taxa file check", () => {
+
+    });
+
+    test("Post-add birds file check", () => {
+
+    });
 })
 
 describe("Test /get/entity/", () => {
@@ -349,7 +357,39 @@ describe("Test /get/children/", () => {
 });
 
 describe("Test /get/level/", () => {
+    test("Valid levels", async () => {
+        for (let i=1; i<=4; i++) {
 
+            let response = await request(app).get(`/get/level/${i}`);
+
+            expect(response.ok).toBeTruthy();
+            expect(response.statusCode).toBe(200);
+            expect(response.headers["content-type"]).toMatch(/json/);
+
+            for (const ob of response.body) {
+                expect(ob.level).toBe(i);
+                expect(valid_taxa).toContainEqual(ob);
+            }
+
+            for (const b of valid_taxa) {
+                if (b.level === i) {
+                    expect(response.body).toContainEqual(b);
+                }
+            }
+        }
+    });
+
+    test("Invalid levels", async () => {
+        const INVALID_LEVELS = [null, -1, "test", 0, 5, 10000];
+
+        for (const level of INVALID_LEVELS) {
+            const response = await request(app).get(`/get/level/${level}`);
+
+            expect(response.ok).toBeFalsy();
+            expect(response.statusCode).toBe(400);
+            expect(response.headers["content-type"]).toMatch(/text/);
+        }
+    })
 });
 
 describe("Test files", () => {
@@ -357,7 +397,61 @@ describe("Test files", () => {
 });
 
 describe("Test /delete/", () => {
+    test("Valid delete bird", async () => {
+        const response = await request(app).delete(`/delete/bird/2`); // delete bird3
 
+        expect(response.ok).toBeTruthy();
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toEqual({});
+
+        // Check delete
+        const check_response = await request(app).get("/get/entity/bird/2")
+        expect(check_response.body).toEqual({});
+    });
+
+    test("Valid delete taxon", async () => {
+        const response = await request(app).delete(`/delete/taxon/2`); // delete family1
+
+        expect(response.ok).toBeTruthy();
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toEqual({});
+
+        // Check delete
+        // family1, genus1, genus2 and all birds should be deleted
+        for (const i of [2, 3, 6]) {
+            const check_response = await request(app).get(`/get/entity/taxon/${i}`);
+
+            expect(check_response.body).toEqual({});
+            expect(check_response.ok).toBeFalsy();
+            expect(check_response.statusCode).toBe(400);
+        }
+
+    });
+
+    test("Invalid delete of Aves", () => {
+
+    });
+
+    test("Invalid delete entities", async () => {
+        let invalid_ids = ["test", 10, 6];
+
+        for (const id of invalid_ids) {
+            for (const type of ["taxon", "bird"]) {
+                const response = await request(app).delete(`/delete/${type}/${id}`);
+
+                expect(response.ok).toBeFalsy();
+                expect(response.statusCode).toBe(400);
+            }
+        }
+    });
+
+    test("Post-delete taxa file check", () => {
+
+    });
+
+    test("Post-delete birds file check", () => {
+
+    });
 });
 
 describe("Test /edit/", () => {
