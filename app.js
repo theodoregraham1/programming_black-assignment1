@@ -227,7 +227,7 @@ function initialise(birds_filename, taxa_filename) {
         let {n} = req.params;
 
         n = parseInt(n);
-        if (isNaN(n)) {
+        if (isNaN(n) || n < 1) {
             res.statusCode = 400;
             res.contentType("text/plain")
             res.send("Request is invalid")

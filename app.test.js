@@ -203,7 +203,7 @@ describe("Test /get/entity/", () => {
 });
 
 describe("Test /list/", () => {
-    test("Test birds", async () => {
+    test("List birds", async () => {
         let response = await request(app).get("/list/bird");
 
         expect(response.ok).toBeTruthy();
@@ -215,7 +215,7 @@ describe("Test /list/", () => {
         }
     });
 
-    test("Test taxa", async () => {
+    test("List taxa", async () => {
         let response = await request(app).get("/list/taxon");
 
         expect(response.ok).toBeTruthy();
@@ -229,7 +229,7 @@ describe("Test /list/", () => {
 });
 
 describe("Test /get/birds/random", () => {
-    test("Test random", async () => {
+    test("Random selection", async () => {
         let response = await request(app).get("/get/birds/random/2");
 
         expect(response.ok).toBeTruthy();
@@ -243,7 +243,7 @@ describe("Test /get/birds/random", () => {
         }
     });
 
-    test("Test determined", async () => {
+    test("At table length", async () => {
         let response = await request(app).get("/get/birds/random/3");
 
         expect(response.ok).toBeTruthy();
@@ -257,7 +257,7 @@ describe("Test /get/birds/random", () => {
         }
     });
 
-    test("Test too many", async () => {
+    test("Above table length", async () => {
         let response = await request(app).get("/get/birds/random/5");
 
         expect(response.ok).toBeTruthy();
@@ -271,7 +271,7 @@ describe("Test /get/birds/random", () => {
         }
     });
 
-    test("Test non-integer parameter", async () => {
+    test("Non-integer parameter", async () => {
         const INVALID_BIRDS = [null, -1, "test"];
 
         for (const bird of INVALID_BIRDS) {
@@ -284,7 +284,15 @@ describe("Test /get/birds/random", () => {
 });
 
 describe("Test /get/children/", () => {
+    test("Base taxon's children", () => {
 
+    });
+
+    test("Children of taxa which are taxa", () => {
+
+    });
+
+    test("Childern ")
 });
 
 describe("Test /get/level/", () => {
