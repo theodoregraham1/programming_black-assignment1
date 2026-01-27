@@ -10,7 +10,7 @@ Index, provides the base HTML page.
 
 #### Returns
 
-A HTML file ("index.html")
+An HTML file ("index.html")
 
 ---
 
@@ -154,7 +154,7 @@ If the `level` of the parent is `1`, every bird in that genus is returned, else 
 
 ---
 
-### GET `get/level/:level`
+### GET `/get/level/:level`
 
 Retrieves all taxa of a given level. 
 
@@ -168,7 +168,7 @@ An `object` array containing every item in the table of taxa which has a matchin
 
 ---
 
-### GET `list/:type`
+### GET `/list/:type`
 
 Retrieves all data from a table
 

@@ -108,43 +108,38 @@ function initialise(birds_filename, taxa_filename) {
         }
 
         try {
+            let valid = true;
             switch (type) {
                 case "taxon":
                     // don't allow Aves to be deleted
-                    if (id !== 0) {
-                        let taxon = taxa_data.findById(id);
-
-                        // If the entry doesn't exist simply do nothing (don't throw an error)
-                        if (taxon) {
-                            taxa_data.removeById(taxon.id);
-                            break;
-                        }
+                    if (id !== 0 && taxa_data.findById(id)) {
+                        taxa_data.removeById(id);
+                    } else {
+                        valid = false;
                     }
-                    res.statusCode = 400;
-                    res.contentType("text/plain");
-                    res.send("Invalid entity to delete");
-                    return;
+                    break;
 
                 case "bird":
                     if (birds_data.findById(id)) {
                         birds_data.removeById(id);
-                        break;
+                    } else {
+                        valid = false;
                     }
-                    res.statusCode = 400;
-                    res.contentType("text/plain");
-                    res.send("Invalid entity to delete");
-                    return;
+                    break;
 
                 default:
-                    // Premature break on error
-                    res.statusCode = 400;
-                    res.contentType("text/plain");
-                    res.send("Invalid entity type");
-                    return;
+                    valid = false;
+                    break;
             }
 
-            res.statusCode = 200;
-            res.send();
+            if (valid) {
+                res.statusCode = 200;
+                res.send();
+            } else {
+                res.statusCode = 400;
+                res.contentType("text/plain");
+                res.send("Invalid entity to delete");
+            }
         } catch (e) {
             res.statusCode = 400;
             res.contentType("application/json");

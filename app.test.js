@@ -392,10 +392,6 @@ describe("Test /get/level/", () => {
     })
 });
 
-describe("Test files", () => {
-
-});
-
 describe("Test /delete/", () => {
     test("Valid delete bird", async () => {
         const response = await request(app).delete(`/delete/bird/2`); // delete bird3
@@ -428,8 +424,16 @@ describe("Test /delete/", () => {
 
     });
 
-    test("Invalid delete of Aves", () => {
+    test("Invalid delete of Aves", async () => {
+        const response = await request(app).delete(`/delete/taxon}/0`);
 
+        expect(response.ok).toBeFalsy();
+        expect(response.statusCode).toBe(400);
+
+        const check_response = await request(app).get("/get/entity/taxon/0");
+
+        expect(check_response.ok).toBeTruthy();
+        expect(check_response.statusCode).toBe(200);
     });
 
     test("Invalid delete entities", async () => {
@@ -455,7 +459,21 @@ describe("Test /delete/", () => {
 });
 
 describe("Test /edit/", () => {
+    test("Valid edit taxon", () => {
 
+    });
+
+    test("Valid edit bird", () => {
+
+    });
+
+    test("Invalid edits taxon", () => {
+
+    });
+
+    test("Invalid edits bird", () => {
+
+    });
 });
 
 function capitalise(s) {
