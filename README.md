@@ -16,7 +16,7 @@ A HTML file ("index.html")
 
 ## Adding Entries
 
-### POST `/add/species/`
+### POST `/add/bird/`
 
 Adds a new species of bird to the table of birds. Returns the created entry.
 
@@ -36,7 +36,7 @@ During errors, can return plain text or a JSON representation of the error
 
 ---
 
-### POST `/add/level/`
+### POST `/add/taxon/`
 
 Adds a new taxon to the table of taxa. Returns the created entry.
 

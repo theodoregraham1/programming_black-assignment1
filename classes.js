@@ -6,6 +6,7 @@
  */
 
 const fs = require("node:fs");
+const path = require("path");
 
 class EntityData {
     // Super class for TaxaData and BirdData singleton classes
@@ -135,7 +136,12 @@ class EntityData {
         fs.writeFile(
             this.#file_name,
             JSON.stringify(this.#data, null, 4),
-            (e)=> {if (e) {throw e;}}
+            (e)=> {
+                if (e) {
+                    fs.mkdirSync(path.dirname(this.#file_name));
+                    this.#writeback();
+                }
+            }
         );
     }
 
@@ -147,7 +153,7 @@ class BirdsData extends EntityData {
     // Singleton class
     static #initialised = false;
 
-    constructor() {
+    constructor(file_name) {
         // Enforce singleton
         if (BirdsData.#initialised) {
             throw new Error("Singleton class can only be initialised once");
@@ -156,7 +162,7 @@ class BirdsData extends EntityData {
         }
 
         super(
-            "./data/birds.json",
+            file_name,
             [],
             ["name", "species", "genus", "description"],
             ["picture"]
@@ -211,7 +217,7 @@ class TaxaData extends EntityData {
     static #initialised = false;
 
     // Class chosen over an object for readability and reality-mimicking sake
-    constructor() {
+    constructor(file_name) {
         // Enforce singleton
         if (TaxaData.#initialised) {
             throw new Error("Singleton class can only be initialised once");
@@ -220,7 +226,7 @@ class TaxaData extends EntityData {
         }
 
         super(
-            "./data/taxa.json",
+            file_name,
             [{
                 id: 0,
                 name: "Aves",

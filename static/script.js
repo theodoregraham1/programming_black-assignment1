@@ -425,7 +425,7 @@ function loadBirdCreator(genus) {
             let data = new FormData(form);
             data = Object.fromEntries(data.entries());
             data.genus = genus.id;
-            let response = await fetch("/add/species/", {
+            let response = await fetch("/add/bird/", {
                 method: "POST",
                 headers: {
                     'Accept': 'application/json, text/plain',
@@ -469,7 +469,7 @@ function loadTaxonCreator(father) {
             data.father = father.id;
             data.level = father.level-1;
 
-            let response = await fetch("add/level/", {
+            let response = await fetch("/add/taxon/", {
                 method: "POST",
                 headers: {
                     'Accept': 'application/json',
