@@ -228,7 +228,7 @@ describe("Test /list/", () => {
     });
 });
 
-describe("Test /get/birds/random", () => {
+describe("Test /get/birds/random/", () => {
     test("Random selection", async () => {
         let response = await request(app).get("/get/birds/random/2");
 
@@ -284,15 +284,68 @@ describe("Test /get/birds/random", () => {
 });
 
 describe("Test /get/children/", () => {
-    test("Base taxon's children", () => {
+    test("Base taxon's children", async () => {
+        const response = await request(app).get("/get/children/0");
 
+        expect(response.ok).toBeTruthy();
+        expect(response.statusCode).toBe(200);
+        expect(response.headers["content-type"]).toMatch(/json/);
+
+        expect(response.body.length).toBe(2);
+
+        for (const ob of response.body) {
+            expect(ob.level).toBe(3);
+            expect(ob.father).toBe(0);
+            expect(valid_taxa).toContainEqual(ob);
+        }
     });
 
-    test("Children of taxa which are taxa", () => {
+    test("Children of high-order taxa", async () => {
+        for (const taxon of valid_taxa) {
+            if (taxon.level !== 1) {
+                const response = await request(app).get(`/get/children/${taxon.id}`);
 
+                expect(response.ok).toBeTruthy();
+                expect(response.statusCode).toBe(200);
+                expect(response.headers["content-type"]).toMatch(/json/);
+
+                for (const ob of response.body) {
+                    expect(ob.level).toBe(taxon.level-1);
+                    expect(ob.father).toBe(taxon.id);
+                    expect(valid_taxa).toContainEqual(ob);
+                }
+
+                for (const t of valid_taxa) {
+                    if (t.father=== taxon.id) {
+                        expect(response.body).toContainEqual(t);
+                    }
+                }
+            }
+        }
     });
 
-    test("Childern ")
+    test("Children of genera", async () => {
+        for (const taxon of valid_taxa) {
+            if (taxon.level === 1) {
+                const response = await request(app).get(`/get/children/${taxon.id}`);
+
+                expect(response.ok).toBeTruthy();
+                expect(response.statusCode).toBe(200);
+                expect(response.headers["content-type"]).toMatch(/json/);
+
+                for (const ob of response.body) {
+                    expect(ob.genus).toBe(taxon.id);
+                    expect(valid_birds).toContainEqual(ob);
+                }
+
+                for (const b of valid_birds) {
+                    if (b.genus === taxon.id) {
+                        expect(response.body).toContainEqual(b);
+                    }
+                }
+            }
+        }
+    });
 });
 
 describe("Test /get/level/", () => {
