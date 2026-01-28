@@ -27,7 +27,7 @@ async function loadIndex() {
     row.className = "d-flex flex-row flex-wrap justify-content-center";
 
     let header_div = document.createElement("div");
-    header_div.classList.add("col-md-9", "mx-auto");
+    header_div.classList.add("col-md-6", "mx-auto");
 
     let header = document.createElement("h4");
     header.appendChild(document.createTextNode("Discover species:"));
@@ -37,6 +37,7 @@ async function loadIndex() {
     try {
         let response = await fetch(`get/birds/random/${NUMBER_OF_CARDS}`);
         let content;
+
         if (!response.ok) {
             alert("Error in request");
         } else {
@@ -440,6 +441,7 @@ function loadBirdCreator(genus) {
             let data = new FormData(form);
             data = Object.fromEntries(data.entries());
             data.genus = genus.id;
+
             let response = await fetch("/add/bird/", {
                 method: "POST",
                 headers: {
@@ -448,8 +450,13 @@ function loadBirdCreator(genus) {
                 },
                 body: JSON.stringify(data)
             });
-            let content = await response.json();
-            await loadBird(content);
+
+            if (!response.ok) {
+                alert("Error in request")
+            } else {
+                let content = await response.json();
+                await loadBird(content);
+            }
         } catch (e) {
             alert(e);
         }
@@ -876,9 +883,9 @@ async function loadBirdEdit(container, buttons_div, image_preview, bird, genus) 
                 },
                 body: JSON.stringify(data),
             });
+
             if (response.ok) {
                 let content = await response.json();
-
                 await loadBird(content);
             } else {
                 alert("Error: Problem in request, please try again later");
@@ -921,9 +928,6 @@ async function loadTaxonEdit(container, buttons_div, taxon, father) {
                 await loadTaxon(content);
             } else {
                 alert("Error: Problem in request, please try again later");
-
-
-
                 await loadTaxon(taxon);
             }
         } catch (e) {
@@ -1046,7 +1050,6 @@ function createDeleteButton(entry, father, type) {
         delete_button.appendChild(document.createTextNode("Confirm deletion"));
 
         delete_button.addEventListener("click", () => {
-            console.log(`delete/${type}/${entry.id}`);
             fetch(`delete/${type}/${entry.id}`, {
                 method: "delete"
             })

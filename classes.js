@@ -24,7 +24,7 @@ class EntityData {
             this.#data = JSON.parse(fs.readFileSync(file_name, "utf-8"));
         } catch (e) {
             this.#data = default_data;
-            this.#writeback();
+            this.#writebackSync();
         }
 
         this.#map = new Map();
@@ -136,11 +136,22 @@ class EntityData {
             JSON.stringify(this.#data, null, 4),
             (e)=> {
                 if (e) {
-                    fs.mkdirSync(path.dirname(this.#file_name));
-                    this.#writeback();
+                    throw e;
                 }
             }
         );
+    }
+
+    #writebackSync() {
+        try {
+            fs.writeFileSync(
+                this.#file_name,
+                JSON.stringify(this.#data, null, 4)
+            )
+        } catch (e) {
+            fs.mkdirSync(path.dirname(this.#file_name));
+            this.#writeback();
+        }
     }
 
     getList() {

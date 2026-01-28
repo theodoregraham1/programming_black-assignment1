@@ -1,3 +1,42 @@
+# Entities
+
+Two distinct entities exist within the system:
+
+### Taxon
+
+Each instance represents a single member of one of 4 of the 8 major taxonomic levels, arranged from broadest to narrowest:
+- Class (`level = 4`)
+- Order (`level = 3`)
+- Family (`level = 2`)
+- Genus (`level = 1`)
+
+All extant  birds are a member of the Class _Aves_, so the system only considers taxa which are _Aves_ or its descendents.
+
+Taxa are stored within `./data/taxa.json`.
+
+Each taxon has the following attributes:
+
+- `id` : `number` - the unique ID of this taxon.
+- `name` : `String` - the Latin scientific name of the taxon.
+- `father` : `number` - the ID of the taxon which is the parent to this taxon. 
+- `description` : `String` - the body text of the entry which describes the taxon.
+- `level` : `number` - the level of the taxon: between 1 (genus) and 3 (order) inclusive (since classes or above cannot be added).
+
+### Bird
+
+Each instance represents a single species of bird.
+
+Birds are stored within `./data/birds.json`
+
+Each bird has the following attributes:
+
+- `id` : `number` - the unique ID of this bird.
+- `name` : `String` - the common (English) name of the bird.
+- `species` : `String` - the "specific epithet" of the bird: the Latin name of the species.
+- `genus` : `number` - the ID number of the taxon which is the genus containing the species. 
+- `description` : `String` - the body text of the entry which describes the bird.
+- `picture` : `String`, _optional_ - a URL linking to an image of the bird.
+
 # API
 
 ---
