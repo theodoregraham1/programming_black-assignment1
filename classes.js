@@ -88,14 +88,17 @@ class EntityData {
         // Does not validate anything
         // Must be overloaded by children to be safe
         let entity = this.#map.get(id);
-
+        let edited = false;
         for (const field of editable_fields) {
             if (field in new_fields) {
                 entity[field] = new_fields[field];
+                edited = true;
             }
         }
 
-        this.#writeback();
+        if (edited) {
+            this.#writeback();
+        }
         return entity;
     }
 
@@ -188,8 +191,6 @@ class BirdsData extends EntityData {
         if ("genus" in new_fields) {
             if (this.#isValidGenus(new_fields.genus)) {
                 editable_fields.push("genus")
-            } else {
-                throw new TypeError("Invalid taxon to set as father");
             }
         }
         return super.edit(id, new_fields, editable_fields);

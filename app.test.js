@@ -20,6 +20,9 @@ function clear_files(files) {
     }
 }
 
+// File checking tests can sometimes fail as the asynchronous file writing hasn't finished yet
+// This is essential to ensure the blocking loop remains unobstructed but would not work in a production scale website with any large number of users
+
 beforeAll(() => {
     clear_files(TEST_FILES);
 
@@ -403,30 +406,104 @@ describe("Test /get/level/", () => {
 });
 
 describe("Test /edit/", () => {
-    test("Valid edit taxon", async () => {
-        const new_taxon = {id: 6, name: "genus2edited", father: 5, description: "testedited"}
+    test("Valid edit taxa", async () => {
+        const new_taxa = [
+            {id: 6, name: "genus2edited", father: 5, description: "testedited"},
+            {id: 5, name: "family2edited"},
+        ];
 
-        const response = await request(app).put("/edit/taxon/")
-            .send(new_taxon)
+        const indices = [5, 4];
+
+        for (let i=0; i<new_taxa.length; i++) {
+            const response = await request(app).put("/edit/taxon/")
+                .send(new_taxa[i])
+
+            expect(response.ok).toBeTruthy();
+            expect(response.statusCode).toBe(200);
+            expect(response.headers["content-type"]).toMatch(/json/);
+
+            expect(response.body).toEqual(
+                expect.objectContaining(new_taxa[i])
+            );
+
+            valid_taxa[indices[i]] = response.body;
+        }
+    });
+
+    test("Valid edit bird", async () => {
+        const new_bird = {id: 2, name: "bird3edited", species: "bird3edited", genus: 6, description: "testedited", picture: "edited"}
+
+        const response = await request(app).put("/edit/bird/")
+            .send(new_bird);
 
         expect(response.ok).toBeTruthy();
         expect(response.statusCode).toBe(200);
-        expect(response.body).toEqual(
-            expect.objectContaining(new_taxon)
-        );
+        expect(response.headers["content-type"]).toMatch(/json/);
+
+        expect(response.body).toEqual(new_bird);
+
+        valid_birds[2] = response.body;
     });
 
-    test("Valid edit bird", () => {
+    test("Invalid edits taxon", async () => {
+        const invalid_taxa = [
+            {id: 0, father: 1},
+            {id: 1, level: 1},
+            {id: 0, test: "test"}
+        ];
 
+        let indices = [6, 0, 6];
+
+        for (let i=0; i<invalid_taxa.length; i++) {
+            const response = await request(app).put("/edit/taxon/")
+                .send(invalid_taxa[i])
+
+            expect(response.ok).toBeTruthy();
+            expect(response.statusCode).toBe(200);
+            expect(response.headers["content-type"]).toMatch(/json/);
+
+            expect(response.body).toEqual(valid_taxa[indices[i]]);
+        }
     });
 
-    test("Invalid edits taxon", () => {
+    test("Invalid edits bird", async () => {
+        const invalid_birds = [
+            {id: 0, genus: 0},
+            {id: 2, test: "test"},
+        ];
 
+        for (const ib of invalid_birds) {
+            const response = await request(app).put("/edit/bird/")
+                .send(ib);
+
+            expect(response.ok).toBeTruthy();
+            expect(response.statusCode).toBe(200);
+            expect(response.headers["content-type"]).toMatch(/json/);
+
+            expect(response.body).toEqual(valid_birds[ib.id]);
+        }
     });
 
-    test("Invalid edits bird", () => {
+    test("Post-edit taxon file check", () => {
+        let taxa_data = fs.readFileSync(TEST_FILES.taxa, "utf-8");
+        taxa_data = JSON.parse(taxa_data);
 
+        expect(taxa_data.length).toBe(valid_taxa.length);
+        for (const t of taxa_data) {
+            expect(valid_taxa).toContainEqual(t);
+        }
     });
+
+    test("Post-edit bird file check", () => {
+        let birds_data = fs.readFileSync(TEST_FILES.birds, "utf-8");
+        birds_data = JSON.parse(birds_data);
+
+        expect(valid_birds.length).toBe(3);
+        expect(birds_data.length).toBe(3);
+        for (const t of valid_birds) {
+            expect(birds_data).toContainEqual(t);
+        }
+    })
 });
 
 describe("Test /delete/", () => {
@@ -442,7 +519,8 @@ describe("Test /delete/", () => {
         expect(check_response.body).toEqual({});
     });
 
-    let deleted_taxa_ids = [2, 3, 6];
+    let deleted_taxa_ids = [2, 3];
+
     test("Valid delete taxon", async () => {
         const response = await request(app).delete(`/delete/taxon/2`); // delete family1
 
@@ -483,7 +561,7 @@ describe("Test /delete/", () => {
     });
 
     test("Invalid delete entities", async () => {
-        let invalid_ids = ["test", 10, 6];
+        let invalid_ids = ["test", 10, 2];
 
         for (const id of invalid_ids) {
             for (const type of ["taxon", "bird"]) {
@@ -493,6 +571,14 @@ describe("Test /delete/", () => {
                 expect(response.statusCode).toBe(400);
             }
         }
+    });
+
+    test("Post-delete birds file check", () => {
+        valid_birds = [];
+        let birds_data = JSON.parse(fs.readFileSync(TEST_FILES.birds, "utf-8"));
+
+        expect(birds_data.length).toBe(0);
+        expect(birds_data).toEqual([]);
     });
 
     test("Post-delete taxa file check", () => {
@@ -505,21 +591,13 @@ describe("Test /delete/", () => {
         }
         valid_taxa = new_valid_taxa
 
-        let taxa_data = JSON.parse(fs.readFileSync(TEST_FILES.taxa, "utf-8"));
+        let taxa_data = fs.readFileSync(TEST_FILES.taxa, "utf-8");
+        taxa_data = JSON.parse(taxa_data);
 
-        expect(valid_taxa.length).toBe(4);
-        expect(taxa_data.length).toBe(4);
+        expect(taxa_data.length).toBe(valid_taxa.length);
         for (const t of taxa_data) {
             expect(valid_taxa).toContainEqual(t);
         }
-    });
-
-    test("Post-delete birds file check", () => {
-        valid_birds = [];
-        let birds_data = JSON.parse(fs.readFileSync(TEST_FILES.birds, "utf-8"));
-
-        expect(birds_data.length).toBe(0);
-        expect(birds_data).toEqual([]);
     });
 });
 
