@@ -402,6 +402,33 @@ describe("Test /get/level/", () => {
     })
 });
 
+describe("Test /edit/", () => {
+    test("Valid edit taxon", async () => {
+        const new_taxon = {id: 6, name: "genus2edited", father: 5, description: "testedited"}
+
+        const response = await request(app).put("/edit/taxon/")
+            .send(new_taxon)
+
+        expect(response.ok).toBeTruthy();
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toEqual(
+            expect.objectContaining(new_taxon)
+        );
+    });
+
+    test("Valid edit bird", () => {
+
+    });
+
+    test("Invalid edits taxon", () => {
+
+    });
+
+    test("Invalid edits bird", () => {
+
+    });
+});
+
 describe("Test /delete/", () => {
     test("Valid delete bird", async () => {
         const response = await request(app).delete(`/delete/bird/2`); // delete bird3
@@ -488,28 +515,11 @@ describe("Test /delete/", () => {
     });
 
     test("Post-delete birds file check", () => {
+        valid_birds = [];
         let birds_data = JSON.parse(fs.readFileSync(TEST_FILES.birds, "utf-8"));
 
         expect(birds_data.length).toBe(0);
         expect(birds_data).toEqual([]);
-    });
-});
-
-describe("Test /edit/", () => {
-    test("Valid edit taxon", () => {
-
-    });
-
-    test("Valid edit bird", () => {
-
-    });
-
-    test("Invalid edits taxon", () => {
-
-    });
-
-    test("Invalid edits bird", () => {
-
     });
 });
 

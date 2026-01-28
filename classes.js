@@ -247,7 +247,7 @@ class TaxaData extends EntityData {
     }
 
     push(taxon) {
-        if (this.isValid(taxon)) {
+        if (!this.isValid(taxon)) {
             throw new Error("Invalid entity pushed")
         }
 
@@ -299,7 +299,8 @@ class TaxaData extends EntityData {
 
     #isValidParent(taxon, parent_id) {
         const father = this.findById(parent_id);
-        return !father || (father.level - taxon.level !== 1)
+
+        return father !== undefined && (father.level - taxon.level === 1)
     }
 }
 

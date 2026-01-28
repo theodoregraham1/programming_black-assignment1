@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 Index
  */
 async function loadIndex() {
+    // TODO Have this interact well when database is empty
     let bod = document.getElementById("main-container")
     clearElement(bod)
 
