@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 Index
  */
 async function loadIndex() {
-    // TODO Have this interact well when database is empty
     let bod = document.getElementById("main-container")
     clearElement(bod)
 
@@ -28,6 +27,14 @@ async function loadIndex() {
     let row = document.createElement("div");
     row.className = "d-flex flex-row flex-wrap justify-content-center";
 
+    let header_div = document.createElement("div");
+    header_div.classList.add("col-md-9", "mx-auto");
+
+    let header = document.createElement("h4");
+    header.appendChild(document.createTextNode("Discover species:"));
+    header_div.appendChild(header);
+    bod.appendChild(header_div);
+
     try {
         let response = await fetch(`get/birds/random/${NUMBER_OF_CARDS}`);
         let content;
@@ -35,12 +42,20 @@ async function loadIndex() {
             alert("Error in request");
         } else {
             content = await response.json();
-            for (const bird of content) {
-                row.appendChild(makeCard(bird));
+            if (content.length !== 0) {
+                for (const bird of content) {
+                    row.appendChild(makeCard(bird));
+                }
+            } else {
+                let p = document.createElement("p");
+                p.appendChild(document.createTextNode("No species exist in the system, go add some!"));
+                row.appendChild(p);
             }
         }
     } catch (e) {
-        alert(e);
+        let p = document.createElement("p");
+        p.appendChild(document.createTextNode("No species exist in the system, go add some!"));
+        row.appendChild(p);
     }
     bod.appendChild(row);
 }
