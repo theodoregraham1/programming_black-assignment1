@@ -1,5 +1,4 @@
 "use strict";
-// TODO: Add aria-labels etc to everything to make accessible (also alt text)
 
 const TAXONOMY_ORDER = ["Species", "Genus", "Family", "Order", "Class"];
 const TAXONOMY_ORDER_PLURALS = ["Species", "Genera", "Families", "Orders", "Classes"]
